@@ -465,12 +465,15 @@ int main() {
     int b = 10;
     int c = 20;
 
+    //常量指针:指针指向的地址可更改,但确定指针后，该地址的内容为常量，不可更改,声明时可以不初始化
     const int *a1 = &b;
-    //常量指针:指针指向的地址可更改,指向地址的内容为常量，不可更改,声明时可以不初始化
-    int* const a2 = &b;
+    
     //指针常量:指针的内容可更改,指针指向的地址为常量,声明时必须初始化
-    const int *const a3 = &b;
+    int* const a2 = &b;
+    
     //地址和内容都不可修改,声明时必须初始化
+    const int *const a3 = &b;
+    
     
     x = 2;          //(×)
     //常数(const)不可更改
@@ -492,7 +495,7 @@ int main() {
 }
 ```
 
-**常量指针**的本质是指针，指针指向的是一个**常量**的地址。所以指针存放的常量的地址可更改，对应的内容不可更改。修改指向的常量可以直接修改指针指向的地址。
+**常量指针**的本质是指针，指针指向的是一个**常量**的地址。所以指针存放的常量的地址可更改，确定地址后，改地址对应的内容不可更改。因此修改指向的常量的地址从而间接修改指针指向的值。
 
 **指针常量**的本质是常量，因此指针指向的地址是常量，不可更改，而指针指向的地址内容可以更改。
 
@@ -1416,21 +1419,24 @@ int main() {
 
 ## 9.	复杂指针的声明
 
-a.一个整型数(An integer)		//int a;
-
-b.一个指向整型数的指针(A pointer to an integer)		//int * a;
-
-c.一个指向指针的指针，它指向的指针是指向一个整型数的(A pointer to a pointer to an integer )		//int ** a;
-
-d.一个有10个整型数的数组(An array of 10 integers)		//int a[10];
-
-e.一个有10个指针的数组，该指针是指向一个整型数的(An array of 10 pointers to integers )		int * a[10];
-
-f. 一个指向有10个整型数数组的指针(A pointer to an array of 10 integers)		//int (*a)[10];
-
-g.一个指向函数的指针，该函数有一个 整型参数并返回一个整型数(A pointer to a function that takes an integer as an argument and returns an integer)		//int (*a)(int);
-
-h.一个有10个指针的数组，该指针指向一个函数，该函数有一个整型参数并返回一个整型数(An array of ten pointers to functions that take an integer argument and return an integer )		//int (*a[10])(int)
+```
+a.一个整型数(An integer)		
+	int a;
+b.一个指向整型数的指针(A pointer to an integer)		
+	int * a;
+c.一个指向指针的指针，它指向的指针是指向一个整型数的(A pointer to a pointer to an integer )		
+	int ** a;
+d.一个有10个整型数的数组(An array of 10 integers)		
+	int a[10];
+e.一个有10个指针的数组，该指针是指向一个整型数的(An array of 10 pointers to integers )		
+	int * a[10];
+f. 一个指向有10个整型数数组的指针(A pointer to an array of 10 integers)		
+	int (*a)[10];
+g.一个指向函数的指针，该函数有一个 整型参数并返回一个整型数(A pointer to a function that takes an integer as an argument and returns an integer)		
+	int (*a)(int);
+h.一个有10个指针的数组，该指针指向一个函数，该函数有一个整型参数并返回一个整型数(An array of ten pointers to functions that take an integer argument and return an integer )		
+	int (*a[10])(int)
+```
 
 **扩展知识:解读复杂指针声明**
 
@@ -1604,7 +1610,7 @@ int main() {
 - 常量指针，表述为“是常量的指针”，它首先应该是一个指针。
 - 指针常量，表述为“是指针的常量”，它首先应该是一个常量。
 
-常量指针，它是一个指向常量的指针。设置常量指针指向一个常量，为的就是防止写程序过程中对指针误操作出现了修改常量这样的错误，编译系统就会提示我们出错信息。因此，常量指针就是指向常量的指针，指针所指向的地址的内容是不可修改的。
+常量指针，它是一个指向常量的指针。设置常量指针指向一个常量，为的就是防止写程序过程中对指针误操作出现了修改常量这样的错误，编译系统就会提示我们出错信息。因此，常量指针就是指向常量的指针，当确定指向地址后，该指针所指向的地址的内容是不可修改的。
 
 指针常量，它首先是一个常量，然后才是一个指针。指针常量就是不能修改这个指针所指向的地址，一开始初始化指向哪儿，它就只能指向哪儿了，不能指向其他的地方了，就像一个数组的数组名一样，是一个固定的指针，不能对它移动操作。如果使用p++，系统就会提示出错。但是注意，这个指向的地方里的内容是可以替换的，这和上面说的常量指针是完全不同的概念。总之，指针常量就是指针的常量，它是不可改变地址的指针，但是可以对它所指向的内容进行修改。
 
@@ -1616,4 +1622,330 @@ char const * p2;		//常量指针: 指针指向的地址可以修改，指向地�
 const char *p3;			//常量指针：同上
 const char *const p4;	//常量指针常量：都不可以修改
 ```
+
+## 17.	找错----常量指针和指针常量的作用
+
+```
+#include <stdio.h>
+
+int main() {
+    const char *node1 = "abc";
+    char *const node2 = "abc";
+
+    node1[2] = 'k';     //Read-only vairiable is not assignable 只读变量，不可分配
+    *node1[2] = 'K';    //指针数组 在此处不应该使用
+    *node1 = "xyz";     //Read-only variable is not assignable  指向的地址可以变，地址对应的值不可以更改
+    node1 = "xyz";      //√ 可以更改指针指向的地址，从而改变内容
+
+    node2[2] = 'k';     //指针常量 可以更改指针指向的地址内容，但是不可对只读变量进行改写。
+    *node2[2] = 'K';    //指针数组 在此处不应该使用
+    *node2 = "xyz";     // 因为声明时直接赋值为常量的地址，而在例2-7中赋值为变量的地址。
+    node2 = "xyz";      //Read-only vairiable is not assignable 只读变量，不可分配
+    return 0;
+}
+```
+
+此例与[例2-7](#找错----const 的使用)的不同之处在于2-7在声明是赋予的是变量的地址，因此可以做出相应的更改，而现在直接赋予常量字符串，因此操作在原有的基础上更改的范围进一步缩小。
+
+例2-7如下：
+
+```
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int a = 10;
+    int b = 20;
+    int c = 30;
+    
+    //指针常量：本质是常量，常量的内容是一个指针，一个指针最基本的就是所指向的地址，而一个指针型的常量意味着指向的地址不可变。
+    // 因此指针常量指向的地址不可变，但指向的地址内容可以更改
+    int *const p1 = &b;		//等同于 int const * p2 = &b;
+
+    *p1 = 100;      //√
+    //p1 = &c;        //×
+    cout<<"*p1:"<<*p1<<endl;
+
+    //常量指针：本质是指针，指针的内容是一个常量的地址，指针指向的地址可以改变，但指定地址后，该地址的对应的值不可以更改。
+    // 因此常量指针指向的地址可以改变，但确定地址后，改地址的内容不可更改。
+    const int *p2 = &a;
+    p2 = &c;        //√
+    //*p2 = 190;      //×
+    cout<<"*p2:"<<*p2<<endl;
+    return 0;
+}
+
+//*p1:100
+//*p2:30
+```
+
+此时，p1为指针常量，本质是常量，常量的内容是一个指针，该指针指向的地址不可改变，指向地址的内容可以更改。如第15，16行。
+
+p2是常量指针，本质是指针，指针最基本的要素就是指向的地址，指针指向的地址是可以改变的，而常量指针指向的是一个常量的地址，因此常量指针可以改变指向的地址，地址确定后，改地址对应的值就不可更改，如22,23行。
+
+## 18.	this指针的正确叙述
+
+关于类中this指针：
+
+- 类的非静态成员函数是属于类的对象，含有this指针。而类的static函数属于类本身，不含this指针。
+- 友元函数是非成员函数，所以它无法通过this指针获得一份拷贝。
+
+## 19.看代码写结果----this 指针
+
+```
+#include <iostream>
+
+using namespace std;
+
+class MyClass {
+public:
+    int data;
+
+    MyClass(int data) {
+        this->data = data;
+    }
+
+    void print() {
+        //cout << data << endl;
+        cout << "hello!" << endl;
+    }
+};
+
+int main() {
+    MyClass *pMyClass;
+    pMyClass = new MyClass(1);
+    pMyClass->print();
+    pMyClass[0].print();
+    pMyClass[1].print();
+    pMyClass[10000000].print();
+    return 0;
+}
+//14行未注释是
+//1
+//hello!
+//1
+//hello!
+//7602368
+//hello!
+//
+//Process finished with exit code -1073741819 (0xC0000005)
+
+
+//14行注释后
+//hello!
+//hello!
+//hello!
+//hello!
+```
+
+对于类成员函数而言，并不是一个对象对应一个单独的成员函数体，而是此类的所有对象共用这个成员函数体。当程序被编译之后，此成员函数地址即已确定。我们常说，调用类成员函数时，会将当前对象的this指针传给成员函数。没错，一个类的成员函数体只有一份，而成员函数之所以能把属于此类的各个对象的数据区别开，就在于每次执行类成员函数时，都会把当前对象的this 指针(对象首地址)传入成员函数，函数体内所有对类数据成员的访问，都会被转化为this->数据成员的方式。
+
+如果print函数里没有访问对象的任何数据成员，那么此时传进来的对象this指针实际上是没有任何用处的。这样的函数，其特征与全局函数并没有太大区别。但如果取消第14行的注释，由于print函数要访问类的数据成员data，而类的数据成员是伴随着对象声明而产生的。但是，我们只new了一个MyClass，显然，下标"1"和 下标"10000000"的MyClass对象根本不存在，那么对它们的数据成员访问也显然是非法的。
+
+## 20.	指针数组与数组指针的区别
+
+**指针数组指一个数组里存放的都是同一个类型的指针**，如
+
+```
+int * a[10];
+```
+
+数组a里面存放了10个int \*型变量，由于它是一个数组，已经在栈区分配了10 个int\*的空间，也就是32位机上是40个byte,每个空间都可以存放一个int型变量的地址。这个时候，你可以为这个数组的每一个元素初始化。
+
+**数组指针是一个指向一维或者多维数组的指针**，如
+
+```
+int * b = new int[10];
+```
+
+指针b指向含有10个整型数据的一维数组。注意，这个时候释放空间一定要delete [],否则会造成内存泄露。
+
+```
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int x1[4] = {1, 2, 3, 4};
+    int x2[2] = {5, 6};
+    int x3[3] = {7, 8, 9};
+
+    //a为指针数组
+    int *a[2];
+    //b为数组指针
+    int *b = x1;
+    int i = 0;
+    a[0] = x2;
+    a[1] = x3;
+    cout << "输出a[0]: ";
+    for (i = 0; i < sizeof(x2) / sizeof(int); i++) {
+        cout << a[0][i] << " ";
+    }
+    cout << endl;
+    cout << "输出a[1]: ";
+    for (i = 0; i < sizeof(x3) / sizeof(int); i++) {
+        cout << a[1][i] << " ";
+    }
+    cout << endl;
+    cout << "输出b: ";
+    for (i = 0; i < sizeof(x1) / sizeof(int); i++) {
+        cout << b[i] << " ";
+    }
+    cout << endl;
+    return 0;
+}
+//输出a[0]: 5 6
+//输出a[1]: 7 8 9
+//输出b: 1 2 3 4 
+```
+
+## 21.	找错----指针数组和数组指针的使用
+
+```
+void prt(char *str[]) {
+    if (*str[0] == '\0')
+        printf("str[0]:%s\n", "空");
+    else
+        printf("str[0]:%s\n", str[0]);
+    printf("str[1]:%s\n", str[1]);
+    printf("str[2]:%s\n", str[2]);
+    printf("str[3]:%s\n", str[3]);
+}
+
+int main() {
+    char *str[] = {"Welcome", "to", "Fortemedia", "Nanjing"};
+
+    printf("%s\n", "--------------");
+    char **p = str + 1;
+    prt(str);
+    printf("%s\n", "--------------");
+
+    str[0] = (*p++) + 2;
+    prt(str);
+    printf("%s\n", "--------------");
+
+    str[1] = *(p + 1);
+    prt(str);
+    printf("%s\n", "--------------");
+
+    str[2] = p[1] + 3;
+    prt(str);
+    printf("%s\n", "--------------");
+
+    str[3] = p[0] + (str[2] - str[1]);
+    prt(str);
+
+
+    return 0;
+}
+//--------------
+//str[0]:Welcome
+//str[1]:to
+//str[2]:Fortemedia
+//str[3]:Nanjing
+//--------------
+//str[0]:空
+//str[1]:to
+//str[2]:Fortemedia
+//str[3]:Nanjing
+//--------------
+//str[0]:空
+//str[1]:Nanjing
+//str[2]:Fortemedia
+//str[3]:Nanjing
+//--------------
+//str[0]:空
+//str[1]:Nanjing
+//str[2]:jing
+//str[3]:Nanjing
+//--------------
+//str[0]:空
+//str[1]:Nanjing
+//str[2]:jing
+//str[3]:g
+```
+
+代码第15行结束时，p指向'to'。
+
+代码第19行结束时，p指向'Fortemedia'。此时str[0]指向第4个字符串"Nanjing"后面的元素，因此其内容为空。
+
+代码第23行结束时，p没有移动，str[1]指向 p的后一个元素地址，即'Nanjing'。
+
+代码第27行，此时p[1]指向'Nanjing'。p[1]+ 3即指向字符串的元素的第4个元素，即\'j\'字符。此行执行之后，str[2]等于\'j\'的地址。
+
+代码第31行，由前文可知str[2] - str[1]等于3，而p[0]指向\'j\'的地址。因此str[4]指向"Nanjing"字符串中的最后一个字符\'g\'的地址。
+
+## 22.	函数指针与指针函数的区别
+
+**指针函数**是指带指针的函数，即本质是一个函数，并且返回类型是某一类型的指针。
+
+事实上，每一个函数，即使它不带有返回某种类型的指针，它本身都有一个入口地址，该地址相当于一个指针。比如函数返回一个整型值，实际上也相当于返回一个指针变量的值，不过这时的变量是函数本身而已，而整个函数相当于一个"变量”。
+
+**函数指针**是指向函数的指针变量，因而它本身首先应是指针变量，只不过该指针变量指向函数。有了指向函数的指针变量后，可用该指针变量调用函数，就如同用指针变量可引用其他类型的变量一样。
+
+```
+#include <iostream>
+
+using namespace std;
+
+int max(int x, int y) {
+    return (x > y ? x : y);
+};
+
+//指针函数
+float *find(float *s, int x) {
+    return s + x;
+};
+
+int main() {
+    float score[] = {10, 20, 30, 40};
+    //函数指针
+    int (*p)(int, int);
+    float *q = find(score + 1, 1);
+    int a;
+    p = max;
+    a = (*p)(1, 2);
+    cout << "a = " << a << endl;
+    cout << "*q=" << *q << endl;
+    return 0;
+}
+//a = 2
+//*q=30
+```
+
+## 23.	数组指针与函数指针的定义
+
+定义下面的几种类型变量:
+
+```
+a.含有10个元素的指针数组		
+	int * a[10];
+b.数组指针
+	int (*a)[10];或 int *a = new int[10];
+c.函数指针
+	void (*fun)(int,int);
+d.指向函数的指针数组
+	int (*fun[10])(int,int);
+```
+
+## 24.	各种指针的定义
+
+```
+a.函数指针
+	int (*p)(int ,int);
+b.函数返回指针
+	int * p();
+c.const指针
+	const int * p;		//常量指针
+d.指向const的指针
+	int * const p;		//指针常量
+e.指向const的const指针。
+	const int * const p;
+```
+
+## 25.	代码改错----函数指针的使用
+
+
 
