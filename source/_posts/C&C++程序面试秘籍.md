@@ -1111,7 +1111,7 @@ int main(){
 
 内联函数在C++类中应用最广的，应该是用来定义存取函数。我们定义的类中一般会把数据成员定义成私有的或者保护的，这样，外界就不能直接读写我们类成员的数据了。对于私有或者保护成员的读写就必须使用成员接口函数来进行。如果我们把这些读写成员函数定义成内联函数的话，将会获得比较好的效率。
 
-```
+```C++
 class A {
 private:
     int nTest;
@@ -1419,7 +1419,7 @@ int main() {
 
 ## 9.	复杂指针的声明
 
-```
+```cpp
 a.一个整型数(An integer)		
 	int a;
 b.一个指向整型数的指针(A pointer to an integer)		
@@ -1885,7 +1885,7 @@ int main() {
 
 **函数指针**是指向函数的指针变量，因而它本身首先应是指针变量，只不过该指针变量指向函数。有了指向函数的指针变量后，可用该指针变量调用函数，就如同用指针变量可引用其他类型的变量一样。
 
-```
+```Cpp
 #include <iostream>
 
 using namespace std;
@@ -1919,7 +1919,7 @@ int main() {
 
 定义下面的几种类型变量:
 
-```
+```Cpp
 a.含有10个元素的指针数组		
 	int * a[10];
 b.数组指针
@@ -1932,7 +1932,7 @@ d.指向函数的指针数组
 
 ## 24.	各种指针的定义
 
-```
+```Cpp
 a.函数指针
 	int (*p)(int ,int);
 b.函数返回指针
@@ -1947,5 +1947,116 @@ e.指向const的const指针。
 
 ## 25.	代码改错----函数指针的使用
 
+```Cpp
+#include <iostream>
 
+using namespace std;
 
+int max(int x, int y) {
+    return x > y ? x : y;
+}
+
+int main() {
+    int *p;
+    int a, b, c;
+    int result;
+    int max(x,y);
+    //int max(int, int);    //仅用于函数声明(函数声明在main之后时，需要声明max函数。函数声明在前时，无需声明)。
+    p = max;
+    cout << "Please input three integer" << endl;
+    cin >> a >> b >> c;
+    result = (*p)((*p)(a, b), c);
+    cout << "result = " << result << endl;
+    return 0;
+}
+```
+
+14行声明错误(按条件，可取消)。
+
+15行指针转换错误，p为int *形指针，而max地址为(int *)(int,int)型。
+
+**改正如下**：
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int max(int x, int y) {
+    return x > y ? x : y;
+}
+
+int main() {
+    int (*p)(int, int);
+    int a, b, c;
+    int result;
+    //int max(int, int);    //仅用于函数声明(函数声明在main之后时，需要声明max函数。函数声明在前时，无需声明)。
+    p = &max;
+    cout << "Please input three integer" << endl;
+    cin >> a >> b >> c;
+    result = (*p)((*p)(a, b), c);
+    cout << "result = " << result << endl;
+    return 0;
+}
+//Please input three integer
+//2 5 6
+//result = 6
+```
+
+## 26.	看代码写结果----函数指针的使用
+
+```Cpp
+#include <stdio.h>
+
+int add1(int a1, int b1);
+
+int add2(int a2, int b2);
+
+int main(int argc, char *argv[]) {
+    int numa1 = 1, numb1 = 2;
+    int numa2 = 2, numb2 = 3;
+    int (*op[2])(int a, int b);     //有两个指针的数组，指针指向一个函数，该函数具有两个int型参数，并返回一个int型值。
+    op[0] = add1;
+    op[1] = add2;
+    printf("%d %d\n", op[0](numa1, numb1), op[1](numa2, numb2));
+    //getchar();
+    return 0;
+}
+
+int add1(int a1, int b1) {
+    return a1 + b1;
+}
+
+int add2(int a2, int b2) {
+    return a2 + b2;
+}
+//3 5
+```
+
+在代码第10行，定义了一个函数指针数组op，它含有两个指针元素。在第11行和第12行把这两个元素分别指向了add1和add2两个函数地址。最后在第13行打印出使用函数指针调用add1和add2这两个函数返回的结果。
+
+## 27.	typedef用于函数指针定义
+
+```cpp
+typedef int (*pfun)(int x,int y);	
+```
+
+这里的pfun是一个使用typedef自定义的数据类型。它表示一个函数指针，其参数有两个，都是int类型，返回值也是int类型。可以按如下步骤使用:
+
+```cpp
+typedef int (*pfun)(int x,int y);
+int fun(int x，int y);
+pfun p = fun;
+int ret = p(2，3);	
+//要注意实现fun函数
+```
+
+第1行定义了pfun类型，表示-一个函数指针类型。
+
+第2行定义了一个函数。
+
+第3行定义了一个pfun类型的函数指针p,并赋给它fun的地址。
+
+第4行调用p(2, 3)，实现fun(2, 3)的调用功能。
+
+定义了一个函数指针类型，表示指向返回值为int,且同时带2个int参数的函数指针类型。**可以用这种类型定义函数指针来调用相同类型的函数**。
