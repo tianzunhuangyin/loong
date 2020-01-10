@@ -2060,3 +2060,531 @@ int ret = p(2，3);
 第4行调用p(2, 3)，实现fun(2, 3)的调用功能。
 
 定义了一个函数指针类型，表示指向返回值为int,且同时带2个int参数的函数指针类型。**可以用这种类型定义函数指针来调用相同类型的函数**。
+
+## 28.	什么是野指针
+
+**“野指针”不是NULL指针，而是指向“垃圾”内存的指针**。人们一般不会错用NULL指针，因为用if语句很容易判断。但是“野指针”是很危险的，if 语句对它不起作用。“野指针”的成因主要有两种:
+
+- **指针变量没 有被初始化**。任何指针变量刚被创建时不会自动成为NULL指针，它的默认值是随机的，它会乱指一气。所以，指针变量在创建的同时应当被初始化，要么将指针设置为NULL，要么让它指向合法的内存。
+- **指针p被free或者delete之后，没有置为NULL**,让人误以为p是个合法的指针。
+
+## 29.	看代码查错----“野指针” 的危害
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    //声明一个short *型指针，并且没有初始化
+    short *bufptr;
+    //声明一个short型数组
+    short bufarray[20];
+    //声明一个变量,取值为十八进制
+    short var = 0x20;
+    printf("var:%d\n", var);
+    //对未初始化的指针不可直接赋值，只能用地址进行赋值
+    *bufptr = var;	(×)
+    bufarray[0] = var;
+
+    return 0;
+}
+```
+
+**改正1**：对15行进行修改，(对为初始化的指针进行赋值)
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    //声明一个short *型指针，并且没有初始化
+    short *bufptr;
+    //声明一个short型数组
+    short bufarray[20];
+    //声明一个变量,取值为十八进制
+    short var = 0x20;
+    printf("var:%d\n", var);
+    //对未初始化的指针不可直接赋值，只能用地址进行赋值
+    bufptr = &var;
+    printf("*bufptr:%d\n", *bufptr);
+    bufarray[0] = var;
+
+    return 0;
+}
+//var:32
+//*bufptr:32
+```
+
+**改正2**：
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    short *bufptr = (short *)malloc(sizeof(short));
+    //声明一个short型数组
+    short bufarray[20];
+    //声明一个变量,取值为十八进制
+    short var = 0x20;
+    printf("var:%d\n", var);
+    //对未初始化的指针不可直接赋值，只能用地址进行赋值
+    //对于未初始化的但已经分配空间的指针，可以直接进行赋值。
+    *bufptr = var;
+    printf("*bufptr:%d\n", *bufptr);
+    bufarray[0] = var;
+
+    return 0;
+}
+//var:32
+//*bufptr:32
+```
+
+**对未初始化的指针不可直接赋值，只能用地址进行赋值。**
+
+**对于未初始化的但已经分配空间的指针，可以直接进行赋值。**
+
+## 30.	有了malloc/free， 为什么还要new/delete
+
+malloc与free是C++/C的标准库函数, new/delete是C++的运算符。它们都可用于申请动态内存和释放内存。
+
+**对于非内部数据类型的对象(如结构体等)而言，光用malloc/free 无法满足动态对象的要求。对象在创建的同时要自动执行构造函数，对象在消亡之前要自动执行析构函数。由于malloc/free是库函数而不是运算符，不在编译器控制权限之内，不能够把执行构造函数和析构函数的任务强加于malloc/ree.**
+
+因此，C++需要-一个能完成动态内存分配和初始化工作的运算符new,以及一个能完成清理与释放内存工作的运算符delete。注意: new/delete 不是库函数。请看下面的例子。
+
+```
+#include <iostream>
+
+using namespace std;
+
+class Obj {
+public:
+    Obj(void) {
+        cout << "Initialization" << endl;
+    }
+
+    ~Obj(void) {
+        cout << "Destroy" << endl;
+    }
+};
+
+void UseMallocFree(void) {
+    cout << "In UseMallocFree()..." << endl;
+    Obj *a = (Obj *) malloc(sizeof(Obj));
+    free(a);
+}
+
+void UseNewDelete(void) {
+    cout << "In UseNewDelete()..." << endl;
+    Obj *a = new Obj;
+    delete a;
+}
+
+int main() {
+    UseMallocFree();
+    UseNewDelete();
+    return 0;
+}
+
+//In UseMallocFree()...
+//In UseNewDelete()...
+//Initialization
+//Destroy
+```
+
+## 31.	程序改错----指针的初始化
+
+```
+#include <stdio.h>
+#include <malloc.h>
+
+struct Tag_Node {
+    struct Tag_Node *left;
+    struct Tag_Node *right;
+    int value;
+};
+typedef struct Tag_Node TNode;
+TNode *root = NULL;
+
+void append(int N);
+
+int main() {
+    append(63);
+    append(45);
+    append(32);
+    append(77);
+    append(96);
+    append(21);
+    append(17);
+    //print();
+    return 0;
+}
+
+void append(int N) {
+    TNode *NewNode = (TNode *) malloc(sizeof(TNode));
+    NewNode->value = N;
+    if (root == NULL) {
+        root = NewNode;
+        return;
+    } else {
+        TNode *temp;
+        temp = root;
+        while ((N >= temp->value && temp->left != NULL) || (N < temp->value && temp->right != NULL)) {
+            while (N >= temp->value && temp->left != NULL)
+                temp = temp->left;
+            while (N < temp->value && temp->right != NULL)
+                temp = temp->right;
+        }
+        if (N >= temp->value)
+            temp->left = NewNode;
+        else
+            temp->right = NewNode;
+        return;
+    }
+}
+```
+
+TNode是一个结构体类型，它有left 和right两个成员指针，分别代表链接左、右两个元素，还有value成员表示元素节点的数据。在append函数中，它想把数据从左到右按降序排列。因此在第35、36、 38行使用while循环来查找合适的位置。这里有一个问题，在这3行都采用temp的left或right与NULL进行判断，然而对堆中分配的内存只做了成员
+value 的初始化(第28行)，没有把left和right初始化为NULL,因此指针left和指针right与NULL进行的判断没有作用。结果是程序中会对野指针指向的地址进行赋值，从而导致程序崩溃。
+
+**改正**：
+
+```cpp
+#include <stdio.h>
+#include <malloc.h>
+
+struct Tag_Node {
+    struct Tag_Node *left;
+    struct Tag_Node *right;
+    int value;
+};
+typedef struct Tag_Node TNode;
+TNode *root = NULL;
+
+void append(int N);
+
+
+int main() {
+    append(63);
+    append(45);
+    append(32);
+    append(77);
+    append(96);
+    append(21);
+    append(17);
+    printf("head: %d\n", root->value);
+    return 0;
+}
+
+void append(int N) {
+    TNode *NewNode = (TNode *) malloc(sizeof(TNode));
+    NewNode->value = N;
+    NewNode->left = NULL;
+    NewNode->right = NULL;
+    if (root == NULL) {
+        root = NewNode;
+        return;
+    } else {
+        TNode *temp;
+        //从根节点开始遍历
+        temp = root;
+        //1.判断相关位置(左大右小)是否为NULL
+        while ((N >= temp->value && temp->left != NULL) || (N < temp->value && temp->right != NULL)) {
+            //2.当不为NULL时(表示有子节点)，进入子接点(递归),重复外部(步骤1)操作。
+            while (N >= temp->value && temp->left != NULL)
+                temp = temp->left;
+            while (N < temp->value && temp->right != NULL)
+                temp = temp->right;
+        }
+        //当节点为NULL时，表示找到该节点，应在此位置插入临时节点temp.(左大右小原则)
+        if (N >= temp->value) {
+            temp->left = NewNode;
+            //形成双向链表(或者双向二叉树）
+            NewNode->right = temp;
+        } else {
+            temp->right = NewNode;
+            //形成双向链表(或者双向二叉树）
+            NewNode->left = temp;
+        }
+        return;
+    }
+}
+```
+
+如上面的程序所示，在第30、31行添加了成员指针left和right的初始化，这样就杜绝了野指针的产生。第51、55行的目的是为了使链表是双向链表。这样在遍历链表时就会比较方便。
+
+## 32.	各种内存分配和释放的函数的联系和区别
+
+C语言的标准内存分配、释放函数: malloc、calloc、realloc、free 等。
+
+malloc与calloc 的区别为1块与n块的区别。
+
+- malloc的调用形式为
+
+    ```
+    (类型* )malloc(size)
+    ```
+
+    在内存的动态存储区中分配一块长度为“size”字节的连续区域，返回该区域的首地址，此时内存中的值没有初始化，是个随机数。
+
+- calloc的调用形式为
+
+    ```
+    (类型* )calloc(n, size)
+    ```
+
+    在内存的动态存储区中分配n块长度为“size”字节的连续区域，返回首地址，此时内存中的值都被初始化为0。
+
+- realloc的调用形式为
+
+    ```
+    (类型* )realloc(*ptr, size)
+    ```
+
+    将ptr内存大小增大到size,新增加的内存块没有初始化。
+
+- free的调用形式为
+
+    ```
+    free(void *ptr)
+    ```
+
+    释放ptr所指向的一块内存空间。
+
+C++中，new/delete函数可以调用类的构造函数和析构函数。
+
+## 33.	程序找错一动态内存的传递
+
+```Cpp
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class Base {
+private:
+    char *name;
+public:
+    Base(char *className) {
+        name = new char[strlen(className)];
+        strcpy(name, className);
+    }
+
+    ~Base() {
+        delete name;
+    }
+
+    char *copyName() {
+        char newname[10] = "";
+        strcpy(newname, name);
+        return newname;
+    }
+
+    char *getName() {
+        return name;
+    }
+};
+
+class Subclass : public Base {
+public:
+    Subclass(char *className) : Base(className) {
+    }
+};
+
+int main() {
+    Base *pBase = new Subclass("test");
+    printf("name: %s\n", pBase->getName());
+    printf("new name: %s\n", pBase->copyName());
+    return 0;
+}
+//name: test
+//new name: (null)
+```
+
+这个程序有Base 和Subclass两个类，其中Subclass 是Base的子类。在本题里，Subclass只是被用来向Base的构造函数传递字符串参数，以达到为Base的私有成员赋值的目的。
+
+代码第11行，在Base的构造函数中用new分配了堆内存。其内存大小为传入的字符串长度，这里有个bug。由于字符串是是以0作为结束符的，应该多分配一个字节存放0。
+
+Base的成员函数copyName()中，返回其内数组的地址。由于数组处于栈中，当copyName调用结束后，栈就会被销毁。这里应返回堆内存地址。
+
+**改正：**
+
+```Cpp
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class Base {
+private:
+    char *name;
+public:
+    Base(char *className) {
+        name = new char[strlen(className)+1];
+        strcpy(name, className);
+    }
+
+    ~Base() {
+        delete name;
+    }
+
+    char *copyName() {
+        char *newname = new char(strlen(name)+1);
+        strcpy(newname, name);
+        return newname;
+    }
+
+    char *getName() {
+        return name;
+    }
+};
+
+class Subclass : public Base {
+public:
+    Subclass(char *className) : Base(className) {
+    }
+};
+
+int main() {
+    Base *pBase = new Subclass("test");
+    printf("name: %s\n", pBase->getName());
+    printf("new name: %s\n", pBase->copyName());
+    return 0;
+}	
+//name: test
+//new name: test
+```
+
+## 34.	动态内存的传递
+
+```cpp
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+void GetMemory(char *p, int num) {
+    p = (char *) malloc(sizeof(char) * num);
+};
+
+int main(void) {
+    char *str = NULL;
+    GetMemory(str, 10);
+    strcpy(str, "hello");
+    return 0;
+}
+```
+
+这里的GetMemory函数有问题。GetMemory函数体内的p实际上是main函数中的str变量在GetMemory函数栈中的一个备份，因为编译器总是为函数的每个参数制作临时的变量。因此，虽然在代码第7行中p申请了堆内存，但是返回到main函数时，str 还是NULL,并不指向那块堆内存。在代码第13行，调用strcpy时会导致程序崩溃。
+
+实际上，GetMemory并不能做任何有用的事情。这里还要注意，由于从GetMemory函数返回时不能获得堆中内存的地址，那块堆内存就不能被继续引用，也就得不到释放，因此调用一次GetMemory函数就会产生num字节的**内存泄漏**。
+
+可以采用3种方法来解决上面的动态内存不能传递的问题。
+
+- 在C语言中，可以通过采用**指向指针的指针**解决这个问题，可以把str的地址传给函数GetMemory。
+
+    ```cpp
+    void GetMemory2(char **p, int num) {
+        //对传递过来的二级指针中的源字符地址str2指针进行分配地址。
+        *p = (char *) malloc(sizeof(char) * num);
+    };
+    ```
+
+    
+
+- 在C++中，多了一种选择，就是传递str**指针的引用**。
+
+    ```cpp
+    //char *&p = char *(&p) :指向char类型p的地址的指针变量。类似于二级指针。不同于GetMemory2中的参数1.取决于取地址是在调用该函数前或后(即在函数中进行取地址)。
+    void GetMemory3(char *&p, int num) {
+        p = (char *) malloc(sizeof(char) * num);
+    };
+    ```
+
+- 使用**函数返回值**来传递动态内存。
+
+    ```
+    char *GetMemory4(int num) {
+        char *p = (char *) malloc(sizeof(char) * num);
+        return p;
+    }
+    ```
+
+**改正：**
+
+```cpp
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+void GetMemory(char *p, int num) {
+    p = (char *) malloc(sizeof(char) * num);
+};
+
+void GetMemory2(char **p, int num) {
+    //对传递过来的二级指针中的源字符地址str2指针进行分配地址。
+    *p = (char *) malloc(sizeof(char) * num);
+};
+
+//char *&p = char *(&p) :指向char类型p的地址的指针变量。类似于二级指针。不同于GetMemory2中的参数1.取决于取地址是在调用该函数前或后(即在函数中进行取地址)。
+void GetMemory3(char *&p, int num) {
+    p = (char *) malloc(sizeof(char) * num);
+};
+
+char *GetMemory4(int num) {
+    char *p = (char *) malloc(sizeof(char) * num);
+    return p;
+}
+
+int main(void) {
+    char *str1 = NULL;
+    char *str2 = NULL;
+    char *str3 = NULL;
+    char *str4 = NULL;
+    GetMemory(str1, 20);
+    
+    //参数&str2为指针str2的地址，所以为二级指针。
+    GetMemory2(&str2, 20);
+    GetMemory3(str3, 20);
+    str4 = GetMemory4(20);
+    strcpy(str2, "GetMemory 2");
+    strcpy(str3, "GetMemory 3");
+    strcpy(str4, "GetMemory 4");
+    cout << "str1 == NULL?" << (str1 == NULL ? "yes" : "no") << endl;
+    cout << "str2:" << str2 << endl;
+    cout << "str3:" << str3 << endl;
+    cout << "str4:" << str4 << endl;
+    free(str2);
+    free(str3);
+    free(str4);
+    str2 = NULL;
+    str3 = NULL;
+    str4 = NULL;
+    return 0;
+}
+//str1 == NULL?yes
+//str2:GetMemory 2
+//str3:GetMemory 3
+//str4:GetMemory 4
+```
+
+在上面的代码中，
+
+GetMemory不能传递动态内存，str始终都是NULL。
+
+GetMemory2()函数采用二维指针作为参数传递; 
+
+GetMemory3()函数采用指针的引用作为参数传递; 
+
+GetMemory4()函数采用返回堆内存指针的方式。
+
+可以看到这3个函数都能起到相同的作用。
+
+另外注意第43~48行，这里在主函数推出之前把指针str2、str3和str4指向的堆内存释放并把指针赋为NULL。**每当决定不再使用堆内存时，应该把堆内存释放，并把指针赋为NULL，这样能避免内存泄漏以及产生野指针**，是良好的编程习惯。
