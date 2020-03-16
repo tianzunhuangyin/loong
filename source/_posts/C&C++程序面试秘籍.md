@@ -746,7 +746,7 @@ int main() {
 
 **注意**:在结构体或类中,最宽基本类型成员的**前面**皆按最大值处理,之后按照能否整除最大值填充字节(trailing padding).
 
-## 15.	√使用sizeof 计算含有虚函数的类对象的空间大小
+## 15.	使用sizeof 计算含有虚函数的类对象的空间大小
 
 ```cpp
 #include <iostream>
@@ -848,11 +848,13 @@ int main() {
 		对于A类来说，由于它含有虚函数，因此占用的内存除了一个整型变量之外，还包括一个隐含的虚表指针成员，但是对于union、class、struct等来说，都采用的字节对齐方式，因此是16个字节。
 		对于B类来说，比A类多一个整型成员，因而多4个字节，一共是16个字节。
 
-**union、class、struct等大小与成员的先后顺序有关。与权限的先后位置有关与否还未知**
+**union、class、struct等大小与成员的先后顺序（字节对齐）有关。与权限的先后位置有关与否还未知**
+
+**在32为平台。指针长度为4,而在64位平台指针长度为8。任意类型指针都是**
 
 可以看出，普通函数不占用内存，只要有虚函数，就会占用一个指针大小的内存，原因是系统多用了一个指针维护这个类的虚函数表，并且注意这个虚函数无论含有多少项(类中含有多少个虚函数)都不会再影响类的大小。
 
-## 16.	使用sizeof计算虚拟继承的类对象的空间大小
+## 16.	√使用sizeof计算虚拟继承的类对象的空间大小
 
 ```cpp
 #include <iostream>
@@ -2730,3 +2732,1149 @@ HANDLE hInstance;
 
 - 句柄所指的可以是一个很复杂的结构，并且很有可能是与系统有关的。比如说线程的句柄，它指向的就是一个类或者结构，它和系统有很密切的关系。当一个线程由于不可预料的原因而终止时，系统就可以返回它所占用的资料，如CPU、内存等。反过来想可以知道，这个句柄中的某一些项是与系统进行交互的。由于Windows系统是一个多任务的系统，它随时都可能要分配内存、回收内存、重组内存。
 - 指针也可以指向一个复杂的结构，但是通常是由用户定义的，所以必需的工作都要用户完成，特别是在删除的时候。
+
+# 4.	字符串
+
+## 1.	使用库函数将数字转换为字符串
+
+C语言提供了几个标准库函数，可以将任意类型(整型、长整型、浮点型等)的数字转换为字符串。下面列举了各函数的方法及其说明。
+
+- itoa():将整型值转换为字符串。
+- ltoa():将长整型值转换为字符串。
+- ultoa():将**无符号长整型**值转换为字符串。
+- gevt():将**浮点型**数转换为字符串，取四舍五入。
+- ecvt():将**双精度浮点型**值转换为字符串，转换结果中不包含十进制小数点。
+- fcvt():以**指定位数为转换精度**，其余同ecvt()。
+
+```cpp
+# include <stdio.h>
+# include <stdlib.h>
+
+int main() {
+    int num_int = 435;
+    double num_double = 435.10f;
+    char str_int[30]= {0};
+    char str_double[30] = {0};
+    //把整数num_int转换成字符串str_int 。
+    //char *__cdecl itoa(int _Val,char *_DstBuf,int _Radix)
+    itoa(num_int, str_int, 10);
+    //把浮点数num_double转换成字符串str_double。
+    //char *__cdecl gcvt(double _Val,int _NumOfDigits,char *_DstBuf)
+    gcvt(num_double, 8, str_double);
+    printf("str_int: %s\n", str_int);
+    printf("str_double: %s\n", str_double);
+    return 0;
+}
+//str_int: 435
+//str_double: 435.10001
+```
+
+## 2.	不使用库函数将整数转换为字符串
+
+**原代码：**
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+void int2str(int n, char *str) {
+    char buf[10] = "";
+    int i = 0;
+    int len = 0;
+    int temp = n < 0 ? -n : n;
+    // temp 为n的绝对值
+    if (str == NULL)
+        return;
+
+    while (temp) {
+        buf[i++] = (temp % 10) + '0'; //把 temp的每一位上的数存入buf
+        temp = temp / 10;
+    }
+    len = n < 0 ? ++i : i;
+    //如果n是负数，则多需要一位来存储负号
+    str[i] = 0;
+    //末尾是结束符0
+    while (1) {
+        i--;
+        if (buf[len - i - 1] == 0) {
+            break;
+        }
+        str[i] = buf[len - i - 1];
+        //把buf数组里的字符拷到字符串
+    }
+    if (i == 0) {
+        str[i] = '-';
+        //如果是负数，添加一个负号
+    }
+}
+
+int main() {
+    int nNum;
+    char p[10];
+    cout << "Please input an integer:";
+    cin >> nNum;
+    cout << "output:";
+    int2str(nNum, p);
+    //整型数转换成字符串
+    cout << p << endl;
+    return 0;
+}
+```
+
+**myself代码：**
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+//计算字符数组长度
+int myStrlen(char a[]) {
+    int b = 0;
+    for (int i = 0;; ++i) {
+        if (a[i] != 0) {
+            b++;
+        } else {
+            return b;
+        }
+    }
+}
+
+//按位保存
+char *save(int num, char buf[]) {
+    int i = 0;
+    int a = num;
+    int b = 0;
+    while (1) {
+        b = a % 10;
+        a = a / 10;
+        buf[i++] = b + '0';
+        if (a == 0) {
+            return buf;
+        }
+    }
+}
+
+//转换
+char *int2str(int a, char *str) {
+    //1.判断是否为负
+    char buf[10] = {0};
+    if (a < 0) {
+        //使负数变为正数
+        a = -a;
+        str[0] = '-';
+        //将数字转换为字符 倒序放入buf数组中。
+        save(a, buf);
+        //获取buf字符数组的长度
+        int len = myStrlen(buf);
+        for (int i = 1; i <= len; ++i) {
+            str[i] = buf[len - i];
+        }
+        return str;
+    } else {
+        save(a, buf);
+        int len = myStrlen(buf);
+        for (int i = 0; i < len; ++i) {
+            str[i] = buf[len - i - 1];
+        }
+        return str;
+    }
+}
+
+int main() {
+    //2^31 = 2147483648 超过该大小 则为负数。因此2147483650输出带有’-‘号.
+    int a = -1235;
+    char str[10];
+    int2str(a, str);
+    printf("str:%s\n", str);
+    return 0;
+}
+```
+
+## 3.	使用库函数将字符串转换为数字
+
+C/C++提供了几个标准库函数，可以将字符串转换为任意类型(整型、长整型、浮点型等)的数字。
+
+- atof():将字符串转换为双精度浮点型值。
+- atoi():将字符串转换为整型值。
+- atol():将字符串转换为长整型值。
+- strtod():将字符串转换为双精度浮点型值，并报告不能被转换的所有剩余数字。
+- strtol):将字符串转换为长整型值，并报告不能被转换的所有剩余数字。
+- strtoul():将字符串转换为无符号长整型值，并报告不能被转换的所有剩余数字。
+
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int num_int;
+    double num_double;
+    //将要被转换为整型值的字符串
+    char str_int[30] = "435";
+    //将要被转换为浮点型值的字符串
+    char str_double[30] = "436.55";
+    //转换为整型值
+    num_int = atoi(str_int);
+    //转换为浮点型值
+    num_double = atof(str_double);
+    printf("num_int: %d\n", num_int);
+    printf("num_double: %lf\n", num_double);
+    return 0;
+}
+//num_int: 435
+//num_double: 436.550000
+```
+
+## 4.	不使用库函数将字符串转换为数字
+
+**原代码：**
+
+```cpp
+#include <iostream>
+
+using namespace std;;
+
+int str2int(const char *str) {
+    int temp = 0;
+    //ptr保存str字符串开头
+    const char *ptr = str;
+    //如果第一-个字符是正负号，则移到下一个字符
+    if (*str == '-' || *str == '+')
+        str++;
+    while (*str != 0) {
+        //如果 当前字符不是数字，则退出循环
+        if ((*str < '0') || (*str > '9')) {
+
+            break;
+        }
+        // 如果当前字符是数字，则计算数值
+        temp = temp * 10 + (*str - '0');
+        //移到下一个字符
+        str++;
+    }
+    //如果字符串以'-'开头，则转换成其相反数
+    if (*ptr == '-') {
+        temp = -temp;
+    }
+    return temp;
+}
+
+int main() {
+    int n = 0;
+    char p[10] = "";
+    //从终端获取-一个字符串
+    cin.getline(p, 20);
+    n = str2int(p);
+    cout << n << endl;
+    return 0;
+}
+//-126
+//-126
+//125
+//125
+```
+
+**myself代码：**
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int str2int(char *str) {
+    int out = 0;
+    int flag = 1;
+    //1.判断正负号,然后进指向下一位
+    if (*str == '-') {
+        //0为负数。1为正数
+        flag = 0;
+        //指针指向符号为之后
+        str++;
+    }
+    //1.判断是否为数字
+    while (*str != 0) {
+        if (*str < '0' || *str > '9') {
+            break;
+        } else {
+            out = out * 10 + (*str++ - 48);
+        }
+    }
+    //根据标志位 更改符号
+    return out = flag ? out : -out;
+}
+
+
+int main() {
+    char input[20] = {0};
+    int a[] = {1,2,3};
+    int len = sizeof(a)/sizeof(int);
+    //1.getline(char_type* __s, streamsize __n)
+    //参数：char指针，n-1=保存有效长度。   -->n = 10,表示只保存9个输入结果，多余的将抛弃。
+    //2.getline(char_type* __s, streamsize __n, char_type __delim)
+    //参数:char指针，n-1=保存有效长度，自定义的结束符。
+    cin.getline(input, 10);
+    int out = str2int(input);
+    printf("out:%d\n", out);
+
+    return 0;
+}
+//123456
+//out:123456
+```
+
+## 5.	编程实现strcpy函数
+
+**原代码：**
+
+```cpp
+#include <stdio.h>
+
+// 实现strSrc到strDest的复制
+char *strcpy(char *strDest, const char *strSrc) {
+    //判断参数strDest和strSrc的有效性
+    if ((strDest == NULL) || (strSrc == NULL)) {
+        return NULL;
+    }
+    //保存目标字符串的首地址
+    char *strDestCopy = strDest;
+    //把strSrc字符串的内容复制到strDest下
+    while ((*strDest++ = *strSrc++) != '\0');
+    return strDestCopy;
+}
+
+//实现获取strSrc字符串的长度
+int getStrLen(const char *strSrc) {
+    //保存长度
+    int len = 0;
+    //循环直到遇见结束符'\0'为止
+    while (*strSrc++ != '\0') {
+        len++;
+    }
+    return len;
+}
+
+int main() {
+    //要被复制的源字符串
+    char strSrc[] = "Hello World!";
+    //要复制到的目的字符数组
+    char strDest[20];
+    //保存目的字符数组中字符串的长度
+    int len = 0;
+    //链式表达式,先复制后计算长度
+    len = getStrLen(strcpy(strDest, strSrc));
+    printf("strDest: %s\n", strDest);
+    printf("Length of strDest: %d\n", len);
+    return 0;
+}
+//strDest: Hello World!
+//Length of strDest: 12
+```
+
+**myself代码：**
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+char *myStrcpy(char *dest, const char *src) {
+    //1、判断是否为空
+    if (src == NULL || src == NULL) {
+        return NULL;
+    }
+    //保存字符串首地址
+    char *temp = dest;
+    //将src复制到dest中
+    while (*src != '\0') {
+        *dest++ = *src++;
+    }
+    return temp;
+}
+
+//计算字符数组长度
+int myStrlen(const char *a) {
+    int b = 0;
+    while (*a++ != '\0') {
+        b++;
+    }
+    return b;
+}
+
+int main() {
+    char src[] = "Hello World!";
+    char dest[20] = "";
+    printf("src len:%d\n", myStrlen(src));
+    printf("len:%d\n", myStrlen(myStrcpy(dest, src)));
+    printf("dest len:%d\n", myStrlen(dest));
+    printf("dest:%s\n", dest);
+    return 0;
+}
+//src len:12
+//len:12
+//dest len:12
+//dest:Hello World!
+//不明白调试的时候，myStrcpy1中的dest无法查看实时相容。但结果正确。此时使用链式表达式求结果时，返回长度为0.。。。。
+```
+
+## 6.	编程实现memcpy函数
+
+**原代码：**
+
+```cpp
+#include <stdio.h>
+#include <assert.h>
+
+void *memcpy2(void *memTo, const void *memFrom, size_t size) {
+    //memTo和memFrom必须有效
+    assert((memTo != NULL) && (memFrom != NULL));
+    //保存memFrom首地址
+    char *tempFrom = (char *) memFrom;
+    //保存memTo首地址
+    char *tempTo = (char *) memTo;
+    //循环size次,复制memFrom的值到memTo中
+    while (size-- > 0)
+        *tempTo++ = *tempFrom++;
+    return memTo;
+}
+
+int main() {
+    //将被复制的字符数组
+    char strSrc[] = "Hello World!";
+    //目的字符数组
+    char strDest[20];
+    //复制strSrc的前4个字符到strDest中
+    memcpy2(strDest, strSrc, 8);
+    //把strDest的第5个元素赋为结束符'\0'
+    strDest[8] = '\0';
+
+    printf("strDest: %s\n", strDest);
+    return 0;
+}
+//strDest: Hello Wo
+```
+
+**myself代码：**
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+void *myMemcpy(void *memTo, const void *memFrom, size_t size) {
+    if (memTo == NULL || memFrom == NULL)
+        return NULL;
+    char *tempMemto = (char *) memTo;
+    char *tempMemForm = (char *) memFrom;
+    char *temp = tempMemto;
+    while (size-- > 0) {
+        *tempMemto++ = *tempMemForm++;
+    }
+    *tempMemto = '\0';
+    return tempMemto;
+}
+
+int main() {
+    char from[] = "hello worldqwer";
+    char to[20];
+    myMemcpy(to, from, 8);
+    printf("len:%d\n", strlen(to));
+    printf("to:%s\n", to);
+    return 0;
+}
+//len:8
+//to:hello wo
+```
+
+## 7.	strcpy与memcpy的区别
+
+- **复制的内容不同。**strcpy 只能复制字符串，而memcpy可以复制任意内容，例如字符数组、整型、结构体、类等。
+- **复制的方法不同。**strcpy 不需要指定长度，它是遇到字符串结束符"\0"而结束的。memcpy则是根据其第三个参数决定复制的长度。
+- **用途不同。**通常在复制字符串时用strcpy;而若需要复制其他类型数据，则一般用memcpy。
+
+## 8.	改错----数组越界
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+void test1() {
+    char string[10];
+    char *str1 = "0123456789";
+    strcpy(string, str1);
+}
+
+void test2() {
+    char string[10], str1[10];
+    int i;
+    for (i = 0; i < 10; i++) {
+        str1[i] = 'a';
+        strcpy(string, str1);
+    }
+}
+
+void test3(char *str1) {
+    char string[10];
+    if (strlen(str1) <= 10) {
+        strcpy(string, str1);
+    }
+}
+
+int main() {
+    test1();
+    test2();
+    test3("123");
+    return 0;
+}
+```
+
+以上三个程序的通病是没有为字符串的'\0'留下空间，导致数组越界。对strcpy这种依靠'\0'判断结束的函数有一定局限。
+
+## 9.	分析程序----数组越界
+
+```cpp
+#define MAX 255
+
+int main() {
+    unsigned char A[MAX], i;
+    for (i = 0; i <= MAX; i++)
+        A[i] = i;
+}
+```
+
+代码第5行的for循环中用的是“<=”，当i=MAX时发生数组越界。注意:这个程序很容易使人误认为只有数组越界的问题，但只要再细心些就能发现，i 是无符号的char类型，它的范围是0~255，所以i<=MAX一直都是真，这样会导致无限循环。可以把“i<=MAX" 改为i<MAX，这样既避免了无限循环，又避免了数组越界。
+
+**改正：**
+
+```cpp
+#define MAX 255
+
+int main() {
+    unsigned char A[MAX], i;
+    for (i = 0; i < MAX; i++)
+        A[i] = i;
+}
+```
+
+## 10.	分析程序----打印操作可能产生数组越界
+
+```cpp
+#include <stdio.h>;
+
+int main() {
+    int a[5] = {0, 1, 2, 3, 4}, *p;
+    p = a;
+    printf("%d\n", *(p + 4 * sizeof(int)));
+    return 0;
+}
+//4225568
+```
+
+打印越界归根结底仍是访问越界。
+
+## 11.	编程实现计算字符串的长度
+
+```cpp
+#include <stdio.h>
+#include <assert.h>
+
+int strlen1(const char *src) {
+    assert(NULL != src);
+    //src必须有效
+    int len = 0;
+    //保存src的长度
+    while (*src++ != '\0')
+        //遇到结束符' \0'时退出循环
+        len++;
+    //每循环一-次，len 加1
+    return len;
+}
+
+int strlen2(const char *src) {
+    assert(NULL != src);
+    //src必须有效
+    const char *temp = src;
+    //保存src首地址
+    while (*src++ != '\0');
+    //遇到结束符' \0 '时退出循环
+    return (src - temp - 1);
+    //返回尾部指针与头部指针之差，即长度
+}
+
+int main() {
+    char p[] = "Hello World!";
+    printf("strlen1 len: %d\n", strlen1(p));
+    //打印方法1得到的结果
+    printf("strlen2 len: %d\n", strlen2(p));
+    //打印方法2得到的结果
+    return 0;
+}
+```
+
+strlen1和strlen2这两个函数都可以用来计算字符串长度。下面来比较它们的区别:
+
+**strlen1用一个局部变量len在遍历的时候做自增，然后返回len。因此，每当while循环一次，就需要执行两次自增操作。**
+
+**strlen2用一个局部变量temp记录src遍历前的位置。while 循环一次只需要一 次自增操作。最后返回指针之间的位置差。**
+
+显然，strlen2比strlen1的效率要高，尤其是在字符串较长的时候。
+
+## 12.	编程实现字符串中子串的查找
+
+**原程序:**
+
+```cpp
+#include <stdio.h>
+#include <assert.h>
+
+char *strstr(char *src, char *sub) {
+    const char *bp;
+    const char *sp;
+    //判断src 与sub的有效性
+    if (src == NULL || NULL == sub) {
+        return src;
+    }
+    //遍历 src字符串
+    while (*src) {
+        //用于src的遍历
+        bp = src;
+        //用于sub的遍历
+        sp = sub;
+        //遍历sub字符串
+        do {
+            //如果到了sub字符串结束符位置
+            if (!*sp)
+                //表示找到了sub字符串，退出
+                return src;
+        } while (*bp++ == *sp++);
+        src += 1;
+    }
+    return NULL;
+}
+
+int main() {
+    char p[] = "123456";
+    char q[] = "34";
+    char *r = strstr(p, q);
+    printf("r:%s\n", r);
+}
+```
+
+**myself程序：**
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+int myStrstr(const char *far_str, const char *sub_str) {
+
+    if (*far_str == NULL || sub_str == NULL) {
+        return 0;
+    }
+    int far_len = strlen(far_str);
+    int sub_len = strlen(sub_str);
+    //子串长度大于父串，返回-1
+    if (far_len < sub_len) {
+        return -1;
+    }
+    //用于记录far_str中第几个字符与sub_str中的首字符匹配
+    int i = 0;
+
+    while (*far_str) {
+        if (*far_str == *sub_str) {
+            //首字符相同,进行后续字符匹配,先判断sub_str是否结束，然后才判断二者后一位是否相等
+            do {
+                if (!*sub_str) {
+                    return i;
+                }
+            } while (*far_str++ == *sub_str++);
+        } else {
+            //首字符不匹配时，是far_str指针移动
+            far_str++;
+            //记位加一
+            i++;
+        }
+    }
+    //没有匹配时，返回0
+    return 0;
+}
+
+int main() {
+    char a[] = "123456";
+    char b[] = "3454";
+    int c = myStrstr(a, b);
+    printf("c:%d\n", c);
+    return 0;
+}
+```
+
+## 13.	编程实现字符串中各单词的翻转
+
+
+
+
+
+# 5.	位运算与嵌入式编程
+
+## 1.	位置转换
+
+```cpp
+#include <stdio.h>
+int main(int argc,char* argv[]) {
+    int i = 5.01;
+    float f = 5;
+    printf("%f\n", 5);
+    printf("%f\n", 5.001);
+    printf("%f\n", f);
+    printf("%d\n", 5.01);
+    printf("%d\n", i);
+    return 0;
+}
+
+//0.000000    ?
+//5.010000    
+//5.000000  
+//1889785610  ?
+//5
+```
+
+32位平台中int和float都占4个字节，double 占8个字节。平台的
+
+printf根据说明符“%f”，认为参数应该是个double类型的参数(在printf 函数中，float会自动转换成double)，因此从栈中读了8个字节。类似地，当printf后的说明符为"%d"时,会认为参数应该是个int类型的参数，因此从栈中读了4个字节。
+
+代码第5行，首先参数5为int型，所以在栈中分配了4个字节的内存用于存放参数5。然后printf从栈中读8个字节。很显然，内存访问越界，会有不可预料的情况发生。
+
+与之相反的是第8行，参数5.01占8个字节，而printf读4个字节，同样会出现不可预料的情况。
+
+## 2.	看代码写出结果----位运算
+
+```cpp
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+    //2字节，共2*8bit，所以范围为0-65535 
+    unsigned short int i = 0;
+    //1字节，8bit，取值范围为0-255
+    unsigned char ii = 255;
+    int j = 8, p, q;
+    
+    p = j << 1;
+    q = j >> 1;
+    i = i - 1;
+    ii = ii + 1;
+    printf("i = %d\n", i);
+    printf("ii = %d\n", ii);
+    printf("p = %d\n", p);
+    printf("q = %d\n", q);
+    return 0;
+}
+//i = 65535
+//ii = 0
+//p = 16
+//q = 4
+```
+
+i在内存中为0x0000,减一之后，数据变为0xffff,即为65535.
+
+ii在内存中为0xff，加一之后，数据变为0x00，结果为0.
+
+## 3.	设置或清除特定的位
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+#define BIT3 (0x1 << 3)
+
+using namespace std;
+
+static int a = 8;
+
+//保证某一位为1
+void set_bit3() {
+    a |= BIT3;
+}
+
+//保证某一位为0
+void clear_bit3() {
+    a &= ~BIT3;
+}
+
+int main() {
+    printf("a:%d\n", a);
+    clear_bit3();
+    printf("a:%d\n", a);
+    set_bit3();
+    printf("a:%d\n", a);
+}
+//a:8
+//a:0
+//a:8
+```
+
+## 4.	计算一个字节里有多少bit被置1
+
+```cpp
+#include <stdio.h>
+
+#define BIT7 (0x1 << 7)  //10000000
+
+int calculate(unsigned char C) {
+    int count = 0;
+    int i = 0;
+    unsigned char comp = BIT7;
+    for (i = 0; i < sizeof(C) * 8; i++) {
+        //同 1 异 0
+        if ((C & comp) != 0) {
+            count++;
+        }
+        comp = comp >> 1;
+    }
+    return count;
+}
+
+int main(int argc, char *argv[]) {
+    unsigned char c = 0;
+    int count = 0;
+    printf("c = ");
+    scanf("%d", &c);
+    count = calculate(c);
+    printf("count = %d\n", count);
+    return 0;
+}
+//c =254
+//count = 7
+```
+
+一个字节(byte)有8位，因此首先在宏定义BIT7中将最高位置成1。然后在calculate函数中比较每个位是否被置成1，如果是，则为count++,循环结束后返回count的值。
+
+## 5.	位运算改错
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+#define BIT_MASK(bit_pos) (0x01<<(bit_pos))
+
+int Bit_Reset(unsigned int *val, unsigned char pos) {
+    if (pos >= sizeof(unsigned int) * 8) {
+        return 0;
+    }
+    val = (val && ~BIT_MASK(pos));
+    return 1;
+}
+
+
+int main() {
+    unsigned int a = 12; //1100
+    Bit_Reset(&a, 3);
+    return 0;
+}
+```
+
+在第12 行中，‘&&’是逻辑运算符，不是位运算符，应该为‘&’，改为‘&’之后，出现问题，
+
+```
+cpp:12:43:error: invalid operands of types 'unsigned int*' and 'int' to binary 'operator&'
+			#define BIT_MASK(bit_pos) (0x01<<(bit_pos))
+													  ^
+```
+
+原因是预定义默认是int型，而val默认是(unsigned int *)型，因此将val变为(unsigned int)型，
+
+**改正如下**：
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+#define BIT_MASK(bit_pos) (0x01<<(bit_pos))
+
+int Bit_Reset(unsigned int *val, unsigned char pos) {
+    if (pos >= sizeof(unsigned int) * 8) {
+        return 0;
+    }
+    *val = (*val & ~BIT_MASK(pos));
+    return 1;
+}
+
+
+int main() {
+    unsigned int a = 12; //1100
+    Bit_Reset(&a, 3);
+    return 0;
+}
+```
+
+## 6.	运用位运算交换a、b两数
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int a = 3;
+    int b = 5;
+
+    a ^= b;
+    b ^= a;
+    a ^= b;
+
+    printf("a:%d,b:%d\n", a, b);
+    return 0;
+}
+//a:5,b:3
+```
+
+**异或**也称为**半加运算**，即相对于加法来说，**只相加，不进位**。
+
+## 7.	列举并解释C++中的4种运算符转化以及它们的不同点
+
+- **const_cast** 操作符:用来帮助调用那些**应该使用却没有使用const关键字的函数**。换句话说，就是供程序设计师在特殊情况下**将限制为const成员函数的const定义解除，使其能更改特定属性**。
+
+- **dynamic_ cast** 操作符:如果启动了支持运行时间类型信息(RTTI)， dynamic_cast可以有助于判断在运行时所指向对象的确切类型。它与**typeid**运算符有关。**可以将一个基类的指针指向许多不同的子类型(派生类),然后将被转型为基础类的对象还原成原来的类**。不过，**限于对象指针的类型转换，而非对象变量**。
+
+- **reinterpret_cast** 操作符:**将一个指针转换成其他类型的指针**，新类型的指针与旧指针可以毫不相关。通常用于某些非标准的指针数据类型转换，例如将(void \*)转换为(char)。它也可以用在指针和整型数之间的类型转换上。
+
+    注意:它存在潜在的危险，除非有使用它的充分理由，否则就不要使用它。例如，它能够将一个(int \*)类型的指针转换为(float*)类型的指针，但是这样就会很容易造成整数数据不能被正确地读取。
+
+- **static_cast** 操作符:它能在相关的对象和指针类型之间进行类型转换。有关的类之间必须通过继承、构造函数或者转换函数发生联系。static_cast操作符还能在数字(原始的)类型之间进行类型转换。通常情况下，**static_cast 操作符大多用于将数域宽度较大的类型转换为较小的类型**。当转换的类型是原始数据类型时，这种操作可以有效地禁止编译器发出警告。
+
+## 8.	用#define声明一个参数
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+#define SECOND_PER_YEAR (unsigned long) (365 * 24 * 60 * 60)
+//#define SECOND_PER_YEAR  (365 * 24 * 60 * 60ul)
+
+using namespace std;
+
+int main(){
+
+    printf("sizeof(long long)%d\n",sizeof(long long) );
+    printf("sizeof(long)%d\n", sizeof(long));
+    printf("sizeof(int)%d\n", sizeof(int));
+    printf("sizeof(short)%d\n",sizeof(short) );
+
+    printf("%ld\n", SECOND_PER_YEAR);
+}
+//64
+//sizeof(long long)8
+//sizeof(long)4
+//sizeof(int)4
+//sizeof(short)2
+//31536000
+```
+
+书上的例子是在16位机器上，因此会溢出，而在32位或64位上，这个时间的值是不会溢出的，因此像第4行一样，末尾加ul。
+
+## 9.	如何用C语言编写死循环
+
+```cpp
+while(1){}
+```
+
+```cpp
+for(;;){}
+```
+
+```cpp
+Loop:
+...
+goto Loop;
+```
+
+第一种**首推**，第二种无法见名知意，而第三种更偏向于汇编。
+
+## 10.	√如何访问特定位置的内存
+
+```cpp
+#include <stdio.h>
+
+using namespace std;
+
+int main(){
+    int *ptr;
+    ptr = (int *)0x67a9;
+    *ptr = 0x100;
+    printf("%d\n", *ptr);
+    return 0;
+}
+```
+
+或者
+
+```cpp
+#include <stdio.h>
+
+using namespace std;
+
+int main(){
+    *(int * const)(0x67a9) = 0x100;
+    printf("%d\n", *ptr);
+    return 0;
+}
+```
+
+上述二者皆可以访问特定内存，但是运行时节会发生**段错误(Segmentation fault)**。无法为特定地址进行设置。
+
+## 11.	对中断服务代码的评论
+
+中断是嵌入式系统中重要的组成部分，这导致很多编译开发商提供一种扩 展，让标准C支持中断。而事实是，产生了一个新的关键字\_\_interrupt。 下面的代码就使用了\_\_interrupt关键字去定义一个中断服务子程序(ISR)。
+
+```c
+__interrupt double coputer_area(double radius){
+	double area = PI * radius * radius;
+	printf("Area = %f",area);
+	return area;
+}
+```
+
+错误：
+
+- ISR不能返回一个值。
+- ISR不能传递参数。
+- 在许多的处理器/编译器中，浮点一般都是不可重入的。有些处理器/编译器需要让额外的寄存器入栈，有些处理器/编译器就是不允许在ISR中做浮点运算。此外，ISR应该是短且有效率的，在ISR中做浮点运算是不明智的。
+- printf()经常有重入和性能上的问题。
+
+## 12.	看代码写结果----整数的自动转换
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+void foo(void){
+    unsigned int a = 6;
+    int b = -20;
+    printf("a+b: %u\n", a+b);
+    if(a + b > 6)
+        puts(">6");
+    else
+        puts("<=6");
+}
+
+int main(){
+    foo();
+    return 0;
+}
+//a+b: 4294967282
+//>6
+```
+
+当表达式中存在**有符号类型**和**无符号类型**时，所有的操作数都自动转换为**无符号类型**。因此，-20变成了一个非常大的
+
+正整数(-20 mod 2^32 = 4294967276)，所以该表达式计算出的结果(4294967276 + 6 = 4294967282)大于6。
+
+## 13.	关键字static的作用是什么
+
+在C语言中，关键字static有以下3个明显的作用。
+
+- 在函数体内，一个被声明为静态的变量在这一函数被调用的过程中维持其值不变。
+- 在模块内(但在函数体外)，一个被声明为静态的变量可以被模块内所有函数访问，但不能被模块外其他函数访问。它是一个本地的全局变量。
+- 在模块内，一个被声明为静态的函数只可被这一模块内的其他函数调用。那就是，这个函数**被限制在声明它模块的本地范围内使用**。
+
+## 14.	关键字volatile有什么含义
+
+一个定义为volatile的变量是说这变量可能会被意想不到地改变，这样，编译器就不会去假设这个变量的值了。精确地说，就是优化器在**用到这个变量时必须每次都小心地重新读取这个变量的值**，而不是使用保存在寄存器里的备份。
+
+- 并行设备的硬件寄存器(如状态寄存器); 
+- 一个中断服务子程序(ISR)中会访问到的非自动变量(Non-automatic variables);
+- 多线程应用中被几个任务共享的变量。
+
+## 15.	判断处理器是Big_endian还是Little_endian
+
+采用**Little-endian**模式的CPU对操作数的存放方式是**从低字节到高字节**，而**Big-endian**模式对操作数的存放方式是**从高字节到低字节**。简记为“**小端低低**”。
+
+```c
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int checkCPU(){
+    union w{
+        int a;
+        char b;
+    } c;
+    c.a = 0x12345678;
+    return (c.b == 0x78);	
+}
+
+int main(){
+    if (checkCPU())
+        printf("%s\n", "little endian!\n");
+    else
+        printf("%s\n", "big endian!\n");
+    return 0;
+}
+//little endian!
+```
+
+**联合体union的存放顺序是所有成员都从低地址开始存放**。
+
+十六进制数：0x12345678在内存中的，表示如下：
+
+|    高地址    |    31 ~24    |    23~16     |     15~8     |     7~0      | 低地址 |
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----: |
+|   小端模式   |     0x12     |     0x34     |     0x56     |     0x78     |        |
+| 存储次序方向 | $\leftarrow$ | $\leftarrow$ | $\leftarrow$ | $\leftarrow$ |        |
+|              |              |              |              |              |        |
+|   大端模式   |     0x78     |     0x56     |     0x34     |     0x12     |        |
+| 存储次序方向 | $\leftarrow$ | $\leftarrow$ | $\leftarrow$ | $\leftarrow$ |        |
+
+## 16.	评价代码片断----处理器字长
+
+```c
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main(){
+    unsigned int zero = 0;
+    //1's complement of zero。 零的 1的补码 即指0的反码。
+    unsigned int compzero = 0xFFFF;
+    return 0;
+}
+```
+
+对于16位机器来说 这段代码是正确的。但是非16位机，则不正确。因为非十六位机的反码不是0xffff，所以取反更合适。
+
+改正：
+
+```c
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+int main(){
+    unsigned int zero = 0;
+    //1's complement of zero。 零的 1的补码 即指0的反码。
+    unsigned int compzero = ~zero;
+    return 0;
+}
+```
+
+# 6.	C++面向对象
+
+## 1.	描述面向对象技术的基本概念
