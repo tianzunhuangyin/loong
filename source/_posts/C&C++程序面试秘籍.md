@@ -1,4 +1,4 @@
-# 1.	C/C++程序基础
+1.	C/C++程序基础
 
 ## 1.	一般赋值语句
 
@@ -3878,3 +3878,2104 @@ int main(){
 # 6.	C++面向对象
 
 ## 1.	描述面向对象技术的基本概念
+
+- 类(class):具有相似的内部状态和运动规律的实体集合。类来自于人们认识自然、认识社会的过程。在这一过程中， 人们主要使用两种方法:**由特殊到一般的归纳法**和**由一般到特殊的演绎法**。在归纳的过程中，从一个个具体的事物中把共同的特征抽取出来，形成一个一般的概念。在演绎的过程中又把同类的事物，根据不同的特征分成不同的小类。
+- 对象(object): 指现实世界中各种各样的实体，也就是类(class) 的实例。它既可以指具体的事物，也可以指抽象的事物。每个对象都有自己的内部状态和运动规律。在面向对象概念中，把对象的内部状态称为属性，运动规律称为方法或事件。
+- 消息(message):指对象间相互联系和相互作用的方式。一个消息主要由5部分组成:发送消息的对象、接收消息的对象、消息传递办法、消息内容(参数)、反馈。
+- 类的特性:**抽象、继承、封装、重载、多态**。
+
+## 2.	判断题----类的基本概念
+
+Which is incorrect about the class? (对于类，下 面哪一个是不正确的? )
+
+- A class is a blueprint to objects.类是对象的蓝图。
+- We use the keyword class to create a class construct.我们使用关键字class创建构造一个类。
+- Once a class is declared, the class name becomes a type name and can be used to declare variables.一旦声明了一个类，该类名就变成一个类型名，可以用来声明变量。
+- The class is same as the struct, and there are no difference between class and struct.类与struct相同，并且class和struct之间没有区别
+
+## 3.选择题----C++与C语言相比的改进
+
+C++是从早期的C语言逐渐发展演变来的。与C语言相比，它在求解问题的方法上进行的最大改进是什么?
+					  a. 面向过程
+
+​			b. √面向对象
+
+​			c. 安全性
+
+​			d. 复用性
+
+C++是从C语言发展演变来的。C语言是**过程式**编程语言，它以**过程为中心、以算法为驱动**。而C++能够使用**面向对象**的编程方式，即使用**以对象为中心、以消息为驱动**的编程方式。这是C++在C语言上的最大改进。
+
+## 4.	class和struct有什么区别
+
+- C语言的struct与C++的class的区别。
+    - struct中只能定义成员变量，不能定义成员函数。只是作为一种复杂数据类型定义，不能用于面向对象编程。
+- C++中的struct和class的区别。
+    - struct**访问权限**以及**继承方式**默认是**public**的，而class为**private**的。
+    - class还可以用于表示模板类型，struct不行。
+
+## 5.	改错----C++类对象的声明
+
+```c++
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+struct Test{
+    Test (int){}
+    Test(){}
+    void fun(){}
+};
+
+int main(){
+    Test a(1);
+    a.fun();
+    Test b();
+    b.fun();
+    return 0;
+}
+```
+
+无参构造函数调用时，无需加小括号。
+
+**改正**：
+
+```c++
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+struct Test{
+    Test (int){}
+    Test(){}
+    void fun(){}
+};
+
+int main(){
+    Test a(1);
+    a.fun();
+    Test b;
+    b.fun();
+    return 0;
+}
+```
+
+## 6.	看代码写结果----C++类成员的访问
+
+```c++
+#include <stdio.h>
+#include <iostream>
+
+#define public private		//(1)
+
+using namespace std;
+
+class Animal{
+public:						//(2)
+    void MakeNoise();
+};
+
+int main() {
+    Animal a;
+    a.MakeNoise();			//(3)
+    return 0;
+}
+```
+
+- 正确。把public宏定义为private。
+- 正确。定义public 成员。注意，由于public已经被定义为private， 因此这里的MakeNoise()成员函数实际上是private的。
+- 错误。**类的对象(或指针)不可调用该类的私有成员函数，只能调用public型成员**。
+
+## 7.	找错----类成员的初始化
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class obj{
+public:
+    explicit obj(int k) : j(k), i(j) {
+    }
+
+    void print() { cout << i << endl << j << endl; }
+
+private:
+    int i;
+    int j;
+};
+
+int main(int argc, char *argv[]) {
+    obj obj(2);
+    obj.print();
+    return 0;
+}
+//0
+//2
+```
+
+**初始化列表**的初始化顺序与**变量声明的顺序**一致， 而不是按照出现在初始化列表中的顺序。这里成员**i**比成员**j**先声明，因此正确的顺序是**先用j对i进行初始化，然后用2对j进行初始化**。由于在对**i**进行初始化时**j**尚未被初始化，**j**的值为随机值，故**i**的值也为随机值;然后用2对**j**进行初始化，**j**的值为2。
+
+## 8.	看代码写结果----静态成员变量的使用
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+class Myclass{
+
+public:
+    Myclass(int a, int b, int C);
+
+    void GetNumber();
+
+    void GetSum();
+
+private:
+    int A;
+    int B;
+    int C;
+    int Num;
+    static int Sum;
+};
+
+int Myclass::Sum = 0;
+
+Myclass::Myclass(int a,int b,int c){
+    A = a;
+    B = b;
+    C = c;
+    Num = A + B + C;
+    Sum = A + B + C;
+}
+
+void Myclass::GetNumber() {
+    cout<<"number:"<<Num<<endl;
+}
+
+void Myclass::GetSum() {
+    cout<<"sum:"<<Sum<<endl;
+}
+
+int main() {
+    Myclass M(3,7,10),N(14,9,11);
+    M.GetNumber();
+    N.GetNumber();
+    M.GetSum();
+    N.GetSum();
+    return 0;
+}
+//number:20
+//number:34
+//sum:34
+//sum:34
+```
+
+静态成员被当作该类类型的全局变量。对于非静态成员，每个类对象都有自己的复制品，而静态成员对每个类的类型只有一个复制品。**静态成员只有一份，由该类类型的所有对象共享访问**。M将sun设置为20，N又将sum设置为34，然后进行输出。
+
+## 9.	与全局对象相比，使用静态数据成员有什么优势
+
+主要有以下两种优势。
+
+- 静态数据成员没有进入程序的全局名字空间，因此不存在程序中其他全局名字冲突的可能性。
+- 使用静态数据成员可以隐藏信息。因为静态成员可以是private成员，而全局对象不能。
+
+## 10.	有哪几种情况只能用intialization list，而不能用assignment
+
+无论是在构造函数初始化列表中初始化成员，还是在构造函数体中对它们赋值，最终结果都是相同的。不同之处在于，使用构造函数**初始化列表**初始化数据成员，没有定义**初始化列表**的构造函数在构造函数体中对数据成员赋值。
+
+对于const 和reference类型成员变量，它们**只能够被初始化而不能做赋值操作**，因此**只能用初始化列表**。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class A{ //A是父类
+private:
+    int a; //private成员
+public:
+    A() {}
+
+    A(int x) : a(x) {} //带参数的构造函数对a初始化
+    void printA() //打印a的值
+    {
+        cout << "a =" << a << endl;
+    }
+};
+
+class B : public A{//B是子类
+private:
+    int b;
+
+public:
+    //需要初始化b以及父类的a
+    B(int x, int y) : A(x) {
+        //a = x;    //a为private,无法在子类中被访问，编译错误
+        //A(x);     //调用方式错误，编译错误
+        b = y;
+    }
+
+    //打印 b的值
+    void printB() {
+        cout << "b =" << b << endl;
+    }
+};
+
+int main(){
+    B b(2, 3);
+    b. printA();
+    //调用子类的printA()
+    b. printB();
+    //调用自己的printB()
+    return 0;
+}
+//a =2
+//b =3
+```
+
+从上面的程序可以看到，**如果在子类的构造函数中需要初始化父类的private 成员，直接对其赋值是不行的(代码第25行)，只有调用父类的构造函数才能完成对它的初始化**。
+
+**在函数体内调用父类的构造函数也是不合法的(代码第26行)，只有采取24行中的初始化列表调用子类构造函数的方式**。
+
+**当类中含有const、reference成员变量和基类的构造函数时都需要初始化列表**。
+
+## 11.	静态成员的错误使用
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class test{
+public:
+    static int i;
+    int j;
+
+    test(int a) : i(1), j(a) {}
+
+    void func1();
+
+    static void func2();
+};
+
+void test::func1() { cout << i << "，" << j << endl; }
+
+void test::func2() { cout << i << "，" << j << endl; }
+
+int main() {
+    test t(2);
+    t. func1();
+    t. func2();
+    return 0;
+}
+//10:19: error: 'int test::i' is a static data member; it can only be initialized at its definition
+//19:44: error: invalid use of member 'test::j' in static member function
+```
+
+第一个错误在于不能初始化i，因为i为**静态成员变量，不允许在类内部被初始化**，只能在类定义外初始化。
+
+第二个错误在于静态成员函数访问非静态成员。因为静态成员函数和静态成员变量一样，不属于类的对象，因此它不含this指针，也就无法调用类的非静态成员。
+
+**改正**：
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+class test{
+public:
+    static int i;
+    int j;
+
+    test(int a) : j(a) {};
+
+    void func1();
+
+    static void func2();
+};
+
+int test::i = 0;
+
+void test::func1() { cout << i << "，" << j << endl; }
+
+void test::func2() { cout << i /*<< "，" << j */<< endl; }
+
+int main() {
+    test t(2);
+    t.func1();
+    t.func2();
+    return 0;
+}
+
+//0，2
+//0
+```
+
+## 12.	对静态数据成员的正确描述
+
+下面对静态数据成员的描述中，正确的是。
+
+- ×A.静态数据成员可以在类体内进行初始化。
+- ×B.静态数据成员不可以被类的对象调用。
+- √C.静态数据成员不能受private控制符的作用。
+- √D.静态数据成员可以直接用类名调用。
+
+A:**静态数据成员必须在类外面初始化，以示与普通数据成员的区别**。
+
+## 13.	main函数执行前还会执行什么代码?
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Test{
+public:
+    //构造函数
+    Test() {
+        cout << "constructor of Test" << endl;
+    }
+};
+
+//全局变量
+Test a;
+
+int main() {
+    cout << "main() start" << endl;
+    //局部变量
+    Test b;
+    return 0;
+}
+//constructor of Test
+//main() start
+//constructor of Test
+```
+
+首先进行全局对象a的构造，然后进入main函数中，再进行局部对象b的构造。
+
+即**全局对象的构造函数会在main函数之前执行**。
+
+## 14.	C++中的空类默认会产生哪些类成员函数
+
+在一个C++空类中。如Empty
+
+```cpp
+class Empty{
+
+};
+```
+
+虽然Empty类定义中没有任何成员，但为了进行一些默认的操作，编译器会加入以下些成员函数，这些成员函数使得类的对象拥有一些通用的功能。
+
+- **默认构造函数和复制构造函数**。它们被用于类的对象的构造过程。
+- **析构函数**。它被用于类的对象的析构过程。
+- **赋值函数**。它被用于同类的对象间的赋值过程。
+- **取值运算**。当对类的对象进行取地址(&)时，此函数被调用。
+
+完整的Empty定义如下：
+
+```c++
+class Empty{
+public:
+    //缺省构造函数
+    Empty();
+
+    //复制构造函数(浅拷贝)
+    Empty(const Empty &);
+
+    //析构函数
+    ~Empty();
+
+    //赋值运算符 (浅拷贝) &为取地址 "operate="是一体的
+    Empty &operator=(const Empty &);
+
+    //取址运算符
+    Empty *operator&();
+
+    //取址运算符const
+    const Empty *operator&() const;
+};
+```
+
+C++t的空类中，默认会产生**默认构造函数**、**复制构造函数**、**析构函数**、**赋值函数**以及**取值运算**。
+
+## 15.	构造函数和析构函数是否可以被重载
+
+**构造函数**可以被重载，因为**构造函数可以有多个**，且可以**带参数**。
+
+**析构函数**不可以被重载。因为**析构函数只能有一个**，且**不能带参数**。
+
+## 16.	关于重载构造函数的调用
+
+```
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+class Test{
+public:
+    Test() {}
+
+    Test(char *Name, int len = 0 ) {}
+
+    Test(char *Name) {}
+};
+
+int main() {
+    Test obj("Hel10");
+    return 0;
+}
+```
+
+下面对程序执行结果的描述中，正确的是()。
+
+- A.将会产生运行时错误
+- √B.将会产生编译错误
+- C.将会执行成功
+- D.以上说法都不正确
+
+```c++
+//6-16.cpp:16:21: error: call of overloaded 'Test(const char [6])' is ambiguous(模糊的)
+//    Test obj("Hel10");
+//    ^
+//6-16.cpp:12:5: note: candidate: Test::Test(char*)
+//    Test(char *Name) {}
+//    ^
+//6-16.cpp:10:5: note: candidate: Test::Test(char*, int)
+//    Test(char *Name, int len = 0 ) {}
+//    ^
+//6-16.cpp:6:7: note: candidate: constexpr Test::Test(const Test&) 复制构造函数
+//    class Test{
+//          ^
+//6-16.cpp:6:7: note: candidate: constexpr Test::Test(Test&&)  右值引用、移动构造函数
+```
+
+Test类定义了两个构造函数。当编译到代码第12行时，由于构造函数的模糊语义，编译器无法决定调用哪一个构造函数，因此会产生编译错误。
+
+另外，如果把第12行注释掉，编译器将不会产生错误。因为C++编译器认为潜在的二义性不是一种错误。
+
+## 17.	构造函数的使用
+
+```c++
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+struct CLS{
+    int m_i;
+
+    CLS(int i) : m_i(i) {
+        cout << "CLS():this = " << this << endl;
+    }
+
+    CLS() {
+        CLS(0);
+        cout << "CLS(int):this = " << this << endl;
+    }
+};
+
+int main() {
+    CLS obj;
+    cout<<"&obj = :"<<&obj<<endl;
+    cout << obj.m_i << endl;
+    return 0;
+}
+//CLS():this = 0x61fdd0
+//CLS(int):this = 0x61fe10
+//&obj = :0x61fe10
+//46  随机数
+```
+
+在代码第14行，不带参数的构造函数直接调用了带参数的构造函数。这种调用往往被很多人误解，以为可以通过构造函数的重载和相互调用实现一些类似默认参数的功能，其实是不行的，而且往往会有副作用。
+
+可以看到，在带参数的构造函数里打印出来的对象地址和对象obj的地址不一致。实际上，代码第14行的调用只是在**栈上生成了一个临时对象**，对于自己本身毫无影响。还可以发现，**构造函数的互相调用引起的后果不是死循环，而是栈溢出**。
+
+## 18.	构造函数explicit与普通构造函数的区别
+
+explicit构造函数是用来防止隐式转换的。
+
+```c++
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+class Test1{
+public:
+    //普通构造函数
+    Test1(int n) { num = n; }
+
+private:
+    int num;
+};
+
+class Test2{
+public:
+    //explicit (显式)构造函数
+    explicit Test2(int n) { num = n; }
+private:
+    int num;
+};
+
+int main() {
+    //隐式调用其构造函数，成功
+    Test1 t1 = 12;
+    //编译错误,不能隐式调用其构造函数
+    //Test2 t2 = 12;
+    //显示调用成功
+    Test2 t3(12);
+    return 0;
+}
+//6-18.cpp:34:16: error: conversion from 'int' to non-scalar type 'Test2' requested
+//        Test2 t2 = 12;
+//                   ^
+```
+
+Test1的构造函数带一个int型的参数，代码第25行会隐式转换成调用Test1的这个构造函数。而Test2的构造函数被声明为explicit(显式)，这表示**不能通过隐式转换来调用这个构造函数**，因此代码第27行会出现编译错误。
+
+**普通构造函数能够被隐式调用，而explicit构造函数只能被显示调用**。
+
+## 19.	explicit构造函数的作用
+
+```c++
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Number{
+public:
+    string type;
+
+    Number() : type("void") {}
+
+    explicit Number(short) : type("short") {}
+
+    Number(int) : type("int") {}
+};
+
+void Show(const Number &n) {
+    cout << n.type;
+}
+
+int main() {
+    short s = 42;
+    Show(s);
+}
+//int
+```
+
+Show()函数的参数类型是Number类对象的引用，代码第19行调用Show(s)时采取了以下所示的步骤。
+
+- Show(s)中的s为short类型，其值为42，因此首先检查参数为short的构造函数能否被隐式转换。由于代码第12行的构造函数被声明为显式调用( explicit)，因此不能隐式转换。于是进行下一步。
+- 42自动转换为int类型。
+- 检查参数为int的构造函数能否被隐式转换。由于代码第14行参数为int的构造函数没有被声明为显式调用，因此调用此构造函数构造出一个临时对象。
+- 打印上一步临时对象的type成员，即"int"。
+
+## 20.	C+ +中虚析构函数的作用是什么
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Base{
+public:
+    //Base的构造函数
+    Base() {};
+
+    //Base的析构函数
+    ~Base() {
+        cout << "Output from the destructor of class Base!" << endl;
+    };
+
+    virtual void DoSomething() {
+        cout << "Do something in class Base!" << endl;
+    };
+};
+
+class Derived : public Base{
+public:
+    //Derived的构造函数
+    Derived() {};
+
+    //Derived的析构函数
+    ~Derived() {
+        cout << "Output from the destructor of class Derived!" << endl;
+    };
+
+    void DoSomething() {
+        cout << "Do something in class Derived!" << endl;
+    };
+};
+
+int main() {
+    //Derived 类的指针
+    Derived *pTest1 = new Derived();
+    pTest1->DoSomething();
+    delete pTest1;
+    cout << endl;
+    //Base类的指针
+    Base *pTest2 = new Derived();
+    pTest2->DoSomething();
+    delete pTest2;
+    return 0;
+}
+//Do something in class Derived!
+//Output from the destructor of class Derived!
+//Output from the destructor of class Base!
+
+//Do something in class Derived!
+//Output from the destructor of class Base!
+```
+
+代码第39行可以正常释放pTestl的资源，而代码第43行没有正常释放pTest2的资源，因为从结果看，Derived类的析构函数并没有被调用。通常情况下，类的析构函数里面都是释放内存资源，而析构函数不被调用的话就会造成内存泄漏。原因是**指针pTest2是Base类型的指针，释放pTest2时只进行Base类的析构函数**。
+
+在代码第8行前面加上virtual关键字后的运行结果如下。
+
+```cpp
+Do something in class Derived!
+Output from the destructor of class Derived!
+Output from the destructor of class Base!
+
+Do something in class Derived!
+Output from the destructor of class Derived!
+Output from the destructor of class Base!
+```
+
+此时释放指针pTest2时，由于Base的析构函数是virtual的，就会先找到并执行Derived类的析构函数，然后执行Base类的析构函数，资源正常释放，避免了内存泄漏。
+
+因此，**只有当一个类被用来作为基类的时候，才会把析构函数写成虚函数**。
+
+## 21.	看代码写结果----析构函数的执行顺序
+
+```c++
+#include<iostream>
+
+using namespace std;
+
+class A{
+private:
+    int a;
+public:
+    A(int aa) { a = aa; };
+
+    ~A() { cout << "Destructor A:" << a << endl; };
+};
+
+class B : public A{
+private:
+    int b;
+public:
+    B(int aa = 0, int bb = 0) : A(aa) { b = bb; };
+
+    ~B() { cout << "Destructor B:" << b << endl; };
+};
+
+int main() {
+    B obj1(5), obj2(6, 7);
+    return 0;
+};
+//Destructor B:7
+//Destructor A:6
+//Destructor B:0
+//Destructor A:5
+```
+
+**析构函数的执行顺序与构造函数的执行顺序相反**。
+
+## 22.	复制构造函数是什么?什么是深复制和浅复制
+
+先来说明什么是复制构造函数，以及它被调用的场合。
+
+复制构造函数是一种特殊的构造函数，它由编译器调用来完成一些基于同一类的其他
+对象的构件及初始化。
+
+如果在类中没有显式地声明一个复制构造函数，那么，编译器会私下里制定一个函数
+来进行对象之间的位复制(bitwise copy)。这个隐含的复制构造函数简单地关联了所有的类成员。
+
+在C++中，下面是3种对象需要复制的情况。因此，**复制构造函数**将会被调用。
+
+- 一个对象以值传递的方式传入函数体。
+- 一个对象以值传递的方式从函数返回。
+- 一个对象需要通过另外一个对象进行初始化。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Test{
+public:
+    int a;
+
+    Test(int x) { a = x; }
+
+    //复制构造函数
+    Test(Test &test) {
+        cout << "copy constructor" << endl;
+        a = test.a;
+    }
+};
+
+//(1)值传递传入函数体
+void fun1(Test test) {
+    cout << "fun1()..." << endl;
+}
+
+//(2)值传递从函数体返回
+Test fun2() {
+    Test t(2);
+    cout << "fun2()..." << endl;
+    return t;
+}
+
+int main() {
+    Test t1(1);
+    //(3)用t1对t2做初始化
+    Test t2 = t1;
+
+    cout << "before fun1()..." << endl;
+    fun1(t1);
+
+    Test t3 = fun2();
+    cout << "after fun2()..." << endl;
+    return 0;
+}
+//copy constructor
+//before fun1()...
+//copy constructor
+//fun1()...
+//fun2()...
+//copy constructor
+//after fun2()...
+```
+
+:zap:**值传递传入函数体**:在代码的36行调用fun1函数时，调用复制构造函数，即实参经过复制产生的。
+
+:zap:**值传递从函数体返回**:在代码第38行调用fun2()，在fun2()中，t为临时变量，在有些编译器中无法通过编译，在MSVC2015中可以运行，返回时对t进行复制，将复制之后的对象赋给t3.
+
+:zap:**一个对象通过另外一个对象进行初始化**:在代码第33行，用另一个对象(t1)对当前对象(t2)进行初始化时，调用复制构造函数。
+
+```c++
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+class Test{
+public:
+    char *buf;
+
+    //不带参数的构造函数
+    Test(void) {
+        buf = NULL;
+    }
+
+    //带参数的构造函数
+    Test(const char *str) {
+        //分配堆内存
+        buf = new char[strlen(str) + 1];
+        //复制字符串
+        strcpy(buf, str);
+    }
+
+    ~Test() {
+        if (buf != NULL) {
+            //释放buf指向的堆内存
+            delete buf;
+            buf = NULL;
+        }
+    }
+};
+int main(){
+    Test t1("hel1o") ;
+    Test t2 = t1;
+    cout << "(t1.buf == t2.buf)?"<<(t1.buf == t2.buf ? "yes" : "no")<<endl;
+    return 0;
+}
+```
+
+这里Test类的buf成员是一个字符指针，在带参数的构造函数中为之分配了一块堆内存来存放字符串，然后在析构函数中又将堆内存释放。在main()函数(代码第33行)使用了对象复制，因此会调用默认的复制构造函数。程序的执行结果如下。
+
+```c++
+(t1.buf == t2.buf)?yes
+
+Process finished with exit code -1073740940 (0xC0000374)(崩溃)
+```
+
+这里程序崩溃发生在main)函数退出对象析构的时候。由前两行的打印结果可以看出,默认复制构造函数只是简单地把两个对象的指针做赋值运算，它们**指向的是同一个地址**。当产生两次析构，**释放同一块堆内存时发生崩溃**。
+
+可以在Test类里通过添加一个**自定义的复制构造函数**解决两次析构的问题。
+
+**改正**：
+
+```c++
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+class Test{
+public:
+    char *buf;
+
+    //不带参数的构造函数
+    Test(void) {
+        buf = NULL;
+    }
+
+    //带参数的构造函数
+    Test(const char *str) {
+        //分配堆内存
+        buf = new char[strlen(str) + 1];
+        //复制字符串
+        strcpy(buf, str);
+    }
+
+    Test(Test &test) {
+        buf = new char[strlen(test.buf) + 1];
+        strcpy(buf, test.buf);
+    }
+
+
+    ~Test() {
+        if (buf != NULL) {
+            //释放buf指向的堆内存
+            delete buf;
+            buf = NULL;
+        }
+    }
+};
+
+int main() {
+    Test t1("hel1o");
+    Test t2 = t1;
+    cout << "(t1.buf == t2.buf)?" << (t1.buf == t2.buf ? "yes" : "no") << endl;
+    return 0;
+}
+//(t1.buf == t2.buf)?no
+```
+
+由于此时buf又分配了一块**堆内存**来保存字符串, t1的buf和t2的buf分别指向不同的堆内存，析构时就不会发生程序崩溃。
+
+:bookmark_tabs:如果复制的对象中**引用了某个外部的内容**(例如分配在堆上的数据)，那么在复制这个对象的时候，让新旧两个对象指向同一个外部的内容，就是**浅复制**;如果在复制这个对象的时候为新对象**制作了外部对象的独立复制**，那么就是**深复制**。
+
+复制构造函数是一种特殊的构造函数，它由编译器调用来完成一些基于同一类的其他对象的构件及初始化。
+
+浅复制是指让新旧两个对象指向同一个外部的内容，而深复制是指为新对象制作了外
+部对象的独立复制。
+
+## 23.	编译器与默认的copy constructor
+
+*什么时候编译器会生成默认的copy constructor 呢?如果已经写了一一个构造函数，编译器还会生成copy constructor吗?*
+
+如果用户**没有自定义复制构造函数**，并且在代码中**用到了复制构造函数**，那么编译器**就会生成默认的复制构造函数**;但如果用户定义了复制构造函数，那么编译器就不会再生成复制构造函数。
+
+如果用户**定义了一个构造函数**，且**不是复制构造函数**，而此时**在代码中用到了复制构造函数**，那么编译器也还**会生成默认的复制构造函数**;如果没有使用，则编译器就不会生成默认的复制构造函数。
+
+## 24.	写一个继承类的复制函数
+
+当然，如果基类中没有私有成员，即所有成员都能被派生类访问，则派生类的复制构造函数可以很容易写。但如果基类有私有成员，并且这些私有成员必须在调用派生类的复制构造函数时被初始化，在这种情况下又该怎么做呢?
+
+编写继承类的复制函数有一个原则:**使用基类的复制构造函数**。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Base{
+public:
+    //默认普通构造函数
+    Base() : i(0) { cout << "Base()" << endl; }
+
+    //普通构造函数
+    Base(int n) : i(n) { cout << "Base(int)" << endl; }
+
+    //复制构造函数
+    Base(const Base &b) : i(b.i) {
+        cout << "Base(Base&)" << endl;
+    }
+
+private:
+    int i; //私有成员
+};
+
+class Derived : public Base{
+public:
+    //默认普通构造函数
+    Derived() : Base(0), j(0) { cout << "Derived()" << endl; }
+
+    //普通构造函数
+    Derived(int m, int n) : Base(m), j(n) { cout << "Derived(int)" << endl; }
+
+    //Derived类的复制构造函数
+    Derived(Derived &obj) : Base(obj), j(obj.j) {
+        //调用了Base的复制构造函数
+        cout << "Derived (Derived&)" << endl;
+    }
+
+private:
+    int j;
+};
+int main()
+{
+    Base b(1);
+    Derived obj(2, 3) ;
+    cout << "-------"<< endl;
+    Derived d(obj);  //显式调用复制构造函数 之前的复制构造函数调用是被动调用。
+    //调用Derived的复制构造函数
+    cout << "-------" << endl;
+    return 0;
+}
+//Base(int)
+//Base(int)
+//Derived(int)
+//-------
+//Base(Base&)
+//Derived (Derived&)
+//-------
+```
+
+Derived类继承自Base类，因此在Derived类内不能使用obj.i或Base::i的方式访问Base的私有成员i。很明显，其复制构造函数只有**使用Base(obj)** (代码第31行)的方式**调用其基类的复制构造函数**来给基类的私有成员i初始化。
+
+## 25.	复制构造函数与赋值函数有什么区别
+
+- 复制构造是一个对象来初始化一块内存区域，这块内存就是新对象的内存区。
+
+```c++
+class A;
+A a;
+A b = a;	//复制构造函数调用。用一个对象初始化另一个对象。
+A b(a);		//此为初始化  显式 复制构造函数调用
+```
+
+而赋值函数是对于一个已经被初始化的对象来进行operator=操作。例如
+
+```c++
+class A;
+A a;
+A b;		//此为初始化
+b = a;		//此为赋值
+```
+
+- 一般来说是在数据成员包含指针对象的时候，应付两种不同的处理需求:一种是复制指针对象，一种是引用指针对象。**复制构造函数在大多数情况下是复制，赋值函数则是引用对象**。
+- 实现不一样。**复制构造函数**首先是一个构造函数，它调用的时候是**通过参数传进来的那个对象来初始化产生一个对象**。**赋值函数**则是把**一个对象赋值给一个原有的对象**，所以，如果原来的对象中有内存分配，要先把内存释放掉，而且还要检查一下两个对象是不是同一个对象，如果是的话，就不做任何操作。
+
+## 26.	编写类String的构造函数、析构函数和赋值函数
+
+```c++
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+class String{
+public:
+    //普通构造函数
+    String(const char *str = NULL);
+
+    //复制构造函数
+    String(const String &other);
+
+    //析构函数
+    ~String();
+
+    //赋值函数
+    String &operator=(const String &other);
+
+private:
+    char *buf;
+};
+
+String::String(const char *str) {
+    cout<<"Construcing"<<endl;
+    //如果str为null，存空字符串“”；
+    if (str == NULL){
+        //分配一个zhijie
+        buf = new char(1);
+        //将之赋值为字符串结束符
+        *buf = '\0';
+    } else{
+        //分配空间容纳str内容
+        buf = new char (strlen(str)+1);
+        //复制buf到私有成员
+        strcpy(buf,str);
+    }
+}
+
+String::String(const String &other) {
+    cout<<"copy construcing"<<endl;
+    //分配空间容纳buf内容
+    buf = new char(strlen(other.buf)+1);
+    //复制buf到私有成员
+    strcpy(buf,other.buf);
+}
+
+String::~String() {
+    cout<<"Destrucing"<<endl;
+    //如果buf不为NULL,释放堆内存
+    if (buf != NULL){
+        delete [] buf;
+        //释放后置为NULL
+        buf = NULL;
+    }
+}
+
+String &String::operator=(const String &other) {
+    cout<<"Operate = function"<<endl;
+    //如果对象与other是同一个对象
+    if (this == &other){
+        //直接返回本身
+        return *this;
+    }
+    //释放堆内存
+    delete []buf;
+    buf = new char (strlen(other.buf)+1);
+    strcpy(buf,other.buf);
+    return *this;
+}
+int main (){
+    //调用普通构造函数
+    String a("hello");
+    //调用普通构造函数
+    String b("world");
+    //调用复制构造函数
+    String c(a);
+    //调用赋值函数
+    c = b;
+
+    return 0;
+}
+//Construcing
+//Construcing
+//copy construcing
+//Operate = function
+//Destrucing
+//Destrucing
+//Destrucing
+```
+
+- 普通构造函数:这里判断了传入的参数是否为NULL。如果是NULL,初始化一一个字节的空字符串(包括结束符^0');如果不是，分配足够大小长度的堆内存来保存字符串。
+- 复制构造函数:只是分配足够小长度的堆内存来保存字符串。
+- 析构函数:如果类私有成员buf不为NULL,释放buf指向的堆内存，并且为了避免产生野指针，将buf赋为NULL.
+- 赋值函数:首先判断当前对象与引用传递对象是否是同一个对象，如果是，不做操作，直接返回;否则，**先释放当前对象的堆内存，然后分配足够大小长度的堆内存复制字符串**。
+
+## 27.	了解C++类各成员函数的关系
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class A{
+private:
+    int num;
+public:
+    A() {
+        cout << "default construcing" << endl;
+    }
+
+    ~A() {
+        cout << "Desconstructor" << endl;
+        cout << num << endl;
+    }
+
+    A(const A &a) {
+        cout << "Copy constructor" << endl;
+    }
+
+    void operator=(const A &a) {
+        cout << "Overload operator" << endl;
+    }
+
+    void SetNum(int n) {
+        num = n;
+    }
+};
+
+int main() {
+    A a1;
+    A a2(a1);
+    A a3 = a1;
+    A &a4 = a1;		//引用
+    a1.SetNum(1);
+    a2.SetNum(2);
+    a3.SetNum(3);
+    a4.SetNum(4);
+}
+//default construcing
+//Copy constructor
+//Copy constructor
+//Desconstructor
+//3
+//Desconstructor
+//2
+//Desconstructor
+//4
+```
+
+代码第35行，定义a4为a1的一个引用，不调用构造函数或赋值函数。
+
+代码第36~39行，调用各个对象的SetNum()成员函数为私有成员num赋值。这里注意，由于a4为a1的引用，因此a4.SetNum()实际上和a1.SetNum()等同。
+
+当main()函数退出时，对象析构顺序与调用构造函数顺序相反，依次为a3、a2和a1。
+
+## 28.	C++类的临时对象
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class B{
+public:
+    B() {
+        cout << "default constructor" << endl;
+    }
+    B(const B &b){
+        cout<<"copy construcing"<<endl;
+    }
+    ~B() {
+        cout << "destructed" << endl;
+    }
+
+    //初始化私有成员data
+    B(int i) : data(i) {
+        cout << "constructed by parameter " << data << endl;
+    }
+
+private :
+    int data;
+};
+
+B Play(B b) {
+    return b;
+}
+```
+
+这里调用Play()函数时，有两种参数类型的传递方式。
+
+如果传递的**参数是整型数**，那么在其函数栈中首先会调用带参数的构造函数，产生一个临时对象，然后返回前(在return代码执行时)调用类的复制构造函数,生成临时对象(这样函数返回后主函数中的对象就被初始化了),最后这个临时对象会在函数返回时(在return代码执行后)析构。见下：
+
+```c++
+int main(int argc, char *argv[]) {
+    B t1 = Play(5);
+    B t2 = Play(t1);
+    return 0;
+}
+
+//constructed by parameter 5	调用带参数的构造函数，在fun内生成临时对象
+//copy construcing  			复制构造 把临时对象复制到t1
+//destructed        			fun中 析构生成的临时对象
+
+//copy construcing  			复制构造函数，在fun内产生临时对象
+//copy construcing  			复制构造函数，把临时对象复制到t2
+//destructed        			fun中 析构生成的临时对象
+//destructed        			释放t2
+//destructed        			释放t1
+```
+
+如果传递的**参数是类的对象**，那么只有第一步与上面的不同，就是其函数栈中会首先调用复制构造函数产生一个临时对象，其余步骤完全相同。见下
+
+```c++
+int main(int argc, char *argv[]) {
+    B t1 = Play(5);
+    B t2 = Play(10);
+    return 0;
+}
+
+//constructed by parameter 5        调用带参数的构造函数，在fun内生成临时对象
+//copy construcing                  复制构造 把临时对象复制到t1
+//destructed                        fun中释放临时变量
+
+//constructed by parameter 10       调用带参数的构造函数，在fun内生成临时对象
+//copy construcing                  复制构造 把临时对象复制到t2
+//destructed                        fun中 析构生成的临时对象
+//destructed                        释放t2
+//destructed                        释放t1
+```
+
+在第一个main函数中的第三行：
+
+
+```c++
+B t2 = Play(t1);
+```
+
+构造函数使用了两次，第一次是在函数要结束(return)时，进行**复制构造函数**，把要返回的t<u>复制</u>到一个临时对象上，第二次则是实现真正的<u>**赋值**</u>，把函数的结果(临时对象)经过**复制构造函数**<u>复制</u>到t2上。
+
+## 29.	复制构造函数和析构函数
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class A{
+public:
+    A() {
+        cout << "This is A Construction" << endl;
+    }
+
+    virtual ~A() {
+        cout << "This is A destruction" << endl;
+    }
+};
+
+A fun() {
+    A a;
+    return a;
+}
+int main(){
+    A a;
+    a = fun();
+}
+
+//This is A Construction
+//This is A Construction
+//This is A destruction
+//This is A destruction
+//This is A destruction
+```
+
+构造函数和析构函数确实是成对的。构造函数除了普通构造函数之外，还包括复制构造函数。
+
+上面的程序中一共构造了 3个对象，分别是main()函数中的a (代码第21行)、fun()函数中的a (代码第17行)以及fun返回时生成的临时对象(代码第18 行)。前两个对象都是用普通构造函数构造的，而由fun返回时生成的临时对象是由复制构造函数生成的。上面的程序中只是在普通构造函数中打印了信息。加入自定义复制构造函数和赋值函数，如下所示。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class A{
+public:
+    A() {
+        cout << "This is A Construction" << endl;
+    }
+
+    virtual ~A() {
+        cout << "This is A destruction" << endl;
+    }
+
+    A(A &a) {
+        cout << "This is A Copy Construction" << endl;
+    }
+
+    A &operator=(const A &a) {
+        cout << "This is an assignment function" << endl;
+        return *this;
+    }
+
+};
+
+A fun() {
+    A a;
+    return a;
+}
+
+int main() {
+    A a;
+    a = fun();
+}
+//This is A Construction
+//This is A Construction
+//This is A Copy Construction
+//This is A destruction
+//This is an assignment function
+//This is A destruction
+//This is A destruction
+```
+
+此时的构造函数和析构函数都被执行了3次。另外，在main()函数中把fun()返回的临时对象赋给了对象a，此时会调用赋值函数。
+
+:zap:构造函数和析构函数确实是成对的，原程序中的**fun返回时生成的临时对象是由复制构造函数生成的**。这里没有在复制构造函数中输出信息(编译器生成默认的复制构造函数)，所以看上去构造函数比析构函数少了一个。
+
+## 30.	看代码写结果----C+ +静态成员和临时对象
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Human{
+public:
+
+    static int human_num;
+
+    Human() {
+        human_num++;
+    }
+
+    ~Human() {
+        human_num--;
+        print();
+    }
+    Human(const Human&){
+        cout<<"copy"<<endl;
+    }
+
+    void print() {
+        cout << " Human nun is: " << human_num << endl;
+    }
+};
+
+int Human::human_num = 0;
+
+Human f1(Human x) {
+    x.print();
+    return x;
+}
+
+int main(int argc, char *argv[]) {
+    Human h1;
+    h1.print();
+    Human h2 = f1(h1);
+    h2.print();
+    return 0;
+}
+//Human nun is: 1
+//copy
+//Human nun is: 1
+//copy
+//Human nun is: 0
+//Human nun is: 0
+//Human nun is: -1
+//Human nun is: -2
+```
+
+这个程序的human 类有一个静态成员human_num，每执行一次普通构造函数，human_num加1，每执行一次析构函数，human num减1。注意，在f1()函数中会使用**默认的复制构造函数**，而默认的复制构造函数没有对human_num 处理。
+
+代码第36行，只构造了对象h1(调用普通构造函数)，因此打印1。
+
+代码第37行，使用值传递参数的方式调用了f1()函数，这里分为3步:
+
+- 在f1()函数内首先会调用复制构造函数生成一个临时对象，因此代码第30行打印1。
+- f1()函数内调用复制构造函数，给main的对象h2初始化(复制临时对象)。
+- f1()函数返回后，临时对象发生析构，此时human的静态成员human_num为0,打印出0。
+
+main()函数结束时有h1和h2两个对象要发生析构，所以分别打印出-1和-2。
+
+程序的意图其实很明显，就是静态成员用human_num记录类human的实例数。然而，由于默认的复制构造没有对静态成员操作，导致了执行结果的不正确。这里可以通过添加一个自定义的复制构造函数解决。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Human{
+public:
+
+    static int human_num;
+
+    Human() {
+        human_num++;
+    }
+
+    ~Human() {
+        human_num--;
+        print();
+    }
+    Human(const Human&){
+        cout<<"copy"<<endl;
+        human_num++;
+    }
+
+    void print() {
+        cout << " Human nun is: " << human_num << endl;
+    }
+};
+
+int Human::human_num = 0;
+
+Human f1(Human x) {
+    x.print();
+    return x;
+}
+
+int main(int argc, char *argv[]) {
+    Human h1;
+    h1.print();
+    Human h2 = f1(h1);
+    h2.print();
+    return 0;
+}
+//Human nun is: 1
+//copy
+//Human nun is: 2
+//copy
+//Human nun is: 2
+//Human nun is: 2
+//Human nun is: 1
+//Human nun is: 0
+```
+
+## 31.	什么是临时对象?临时对象在什么情况下产生
+
+在交换两个数的过程中，通常会用到一个临时变量，但此时的临时变量准确来说是函数的局部变量。
+
+真正的临时对象是看不见的，它不会出现在程序代码中。大多数情况下，它会影响程序执行的效率，所以有时想避免临时对象的产生。它通常在以下两种情况下产生。
+
+- 参数按值传递。
+- 返回值按值传递。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Test{
+public:
+    //默认构造函数
+    Test() : num(0) {
+        cout << "默认构造：this : =" << this << endl;
+    }
+
+
+    //带参数 的构造函数
+    Test(int number) : num(number) {
+        cout << "有参构造：this : =" << this << endl;
+    }
+
+    //打印私有成员num
+    void print() {
+        cout << "num=" << num << endl;
+    }
+    //添加复制构造 会导致数据错误
+    Test (const Test&){
+        cout << "copy this : =" << this << endl;
+    }
+    //析构函数，打印this指针和私有成员num
+    ~Test() {
+        cout << "destructor: this : =" << this << ",num=" << num << endl;
+    }
+
+private:
+    int num ;
+};
+
+//参数按值传递
+void fun1(Test test) {
+    test.print();
+}
+
+Test fun2() {
+    Test t(3);
+    //返回值按值传递
+    return t;
+
+}
+
+int main(int argc, char *argv[]) {
+    Test t1(1);
+    //对象传入
+    fun1(t1);
+    cout<<"--------"<<endl;
+    //整型数2传入
+    fun1(2);
+    cout<<"--------"<<endl;
+    t1 = fun2();
+    return 0;
+}
+//有参构造：this : =0x61fdd0            		构造t1
+//copy this : =0x61fde0						复制构造fun1
+//num=-1
+//destructor: this : =0x61fde0,num=-1		析构fun1中临时对象
+//        --------
+//有参构造：this : =0x61fdf0					有参构造fun1中临时对象
+//num=2
+//destructor: this : =0x61fdf0,num=2		析构构造fun1中临时对象
+//        --------
+//有参构造：this : =0x61fe00					构造fun2中的临时(局部？？)对象t
+//destructor: this : =0x61fe00,num=3		析构fun2中的临时(局部？？)对象t
+//destructor: this : =0x61fdd0,num=3		析构main中的t1
+```
+
+这里代码第50行和第53行使用了两种类型的参数传入fun1()函数。它们都会生成临时变量，不同点是要采用不同的方式:第50行的调用**使用了复制构造函数创建临时变量**，而第53行调用使用的则是**带参数的构造函数创建临时变量**。
+
+为了避免临时变量的产生，可以使用**按引用传递**代替**按值传递**，修改fun1
+
+```c++
+void fun1(Test &test){
+    test.print();
+}
+```
+
+这样，fun1()函 数的参数就是一个已经存在的对象引用，此时整型值是不能传进来的。执行下面的主程序。
+
+```c++
+int main(int argc, char* argv[ ]){
+	Test t1(1);
+	fun1(t1); //对象引用传入
+	return 0;
+}
+//有参构造：this : =0x61fe00
+//num=1
+//destructor: this : =0x61fe00,num=1
+```
+
+:zap:引用**必须有一个实在的、可引用的对象**，否则引用是错误的。因此，在没有实在的、可引用的对象的时候，只有依赖于临时对象。
+
+## 32.	为什么C语言不支持函数重载而C+ +能支持
+
+**函数重载**是用来描**述同名函数具有相同或者相似的功能，但数据类型或者是参数不同的函数管理操作**。例如，要进行两种不同数据类型的和的操作，在C语言里需要写两个不同名称的函数来进行区分。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Test{
+public:
+    //相加,传入参数以及返回值都是int
+    int add(int x, int y) {
+        return x + y;
+    }
+
+    //相加 ,传入参数以及返回值都是float
+    float add(float x, float y) {
+        return x + y;
+    }
+};
+
+//相加,传入参数以及返回值都是int
+int add(int x, int y) {
+    return x + y;
+}
+
+//相加,传入参数以及返回值都是float
+float add(float x, float y) {
+    return x + y;
+}
+
+int main(int argc, char *argv[]) {
+    int i = add(1, 2);
+    float f = add(1.1f, 2.2f);
+    Test test;
+    int i1 = test.add(3, 4);
+    float f1 = test.add(3.3f, 4.4f);
+    cout << "i =" << i << endl;
+    cout << "f =" << f << endl;
+    cout << "i1 = " << i1 << endl;
+    cout << "f1 = " << f1 << endl;
+    return 0;
+}
+//i =3
+//f =3.3
+//i1 = 7
+//f1 = 7.7
+```
+
+上面的程序中使用了全局函数和类成员函数的重载。可以看到，在C++中可以根据**传入参数类型和返回类型**来区分不同的重载函数。
+
+C语言不支持函数重载，C++却支持，为什么呢?这是因为C++的重载函数经过编译器处理之后，两个函数的符号是不相同的。例如代码第19行的add函数，经过处理后变成了\_int_add_int_int之类，而后者变成了。\_float_add_float_float之类。 这样的名字**包含了函数名、函数参数数量及返回类型信息**，C+ +就是**靠这种机制来实现函数重载**的。
+
+## 33.	判断题----函数重载的正确声明
+
+- int calc(int, int);
+    int calc (const int,const int) ;
+
+- int get();
+
+    double get();
+
+- int *reset(int *);
+    double *reset (double *);
+
+- extern "C" int compute(int *, int) ;
+    extern "C" double compute (double * ，double);
+
+解析：
+
+- A错误。第二个函数被视为重复声明，第二个声明中的const修饰词会被忽略。
+- B错误。第二个声明是错误的，因为单就函数的返回值而言，不足以区分两个函数的重载。
+- C正确。这是合法的声明，reset()函 数被重载。
+- D错误。第二个函数声明是错误的，因为在一组重载函数中，只能有一个函数被指定为extern "C"。
+
+## 34.	重载和覆写有什么区别
+
+覆写，重写，(overriding) 是指子类改写了父类的方法，重载(overloading) 是指同一个函数的不同版本之间参数不同。
+
+**重载是编写一个与已有函数同名但是参数表不同(参数数量或参数类型不同)的方法**，它具有如下所示的特征。
+
+- 方法名必须相同。
+- 参数列表必须不相同，与参数列表的顺序无关。
+- 返回值类型可以不相同。
+
+**覆写是派生类重写基类的虚函数**，它具有如下所示的特征。
+
+- 只有虚方法和抽象方法才能够被覆写。
+- 相同的函数名。
+- 相同的参数列表。
+- 相同的返回值类型。
+
+重载是一种语法规则，由编译器在编译阶段完成，不属于面向对象的编程；而覆写是由运行阶段决定的，是面向对象编程的重要特征。
+
+## 35.	编程题----MyString类的编写
+
+```c++
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+class MyString{
+public:
+    MyString(char *s) {
+        str = new char[strlen(s) + 1];
+        strcpy(str, s);
+    }
+
+    ~MyString() {
+        delete[]str;
+    }
+
+    MyString &operator=(MyString &string) {
+        if (this == &string) {
+            return *this;
+        }
+        if (str != NULL) {
+            delete[]str;
+        }
+        str = new char[strlen(string.str) + 1];
+        strcpy(str, string.str);
+        return *this;
+    }
+
+    MyString &operator+(MyString &string) {
+        char *temp = str;
+        str = new char[strlen(temp) + strlen(string.str) + 1];
+        strcpy(str, temp);
+        delete temp;
+        strcat(str, string.str);
+        return *this;
+    }
+
+    /*//重载+ (不改变被加对象)
+    MyString &operator+(MyString &string) {
+        MyString *pString = new MyString(""); //堆内存中构造对象
+        pString->str = new char[strlen(str) + strlen(string.str) + 1];
+        //复制第一个字符串
+        strcpy(pString->str, str);
+        //连接第二个字符串
+        strcat(pString->str, string.str);
+        //返回堆中的对象
+        return *pString;
+    }*/
+    void print() {
+        cout << str << endl;
+    }
+
+private:
+    char *str;
+};
+
+/*//MyString类的友员，要求str成员是public访问权限
+//重载 + (不改变被加对象)
+MyString & operator + (MyString &left, MyString &right) {
+    MyString *pString = new MyString("");
+    pString->str = new char[strlen(left.str) + strlen(right.str) + 1];
+    strcpy( pString->str, left.str);
+    strcat (pString->str, right.str);
+    return *pString;
+} */
+
+int main(int argc, char *argv[]) {
+    MyString a("hello ");
+    MyString b("world");
+    MyString c("");
+    //先做加法，再赋值
+    c = c + a;
+    c.print();
+    //先做加法，再赋值
+    c = c + b;
+
+    c.print();
+    c = a + b;
+    a.print();
+    c.print();
+    return 0;
+}
+```
+
+第1个版本返回this对象，它改变了被加对象的内容。使用第一个'+' 操作符重载函数版本的执行结果:
+
+```c++
+//hello
+//hello world
+//hello world		对象a的str被改变
+//hello world
+```
+
+第2个版本和第3个版本都是返回堆中构造的对象，它们没有改变被加对象内容。它们的区别如下。
+
+- 第2个版本属于类的成员函数，而第3个版本是类的友员函数。
+- 第2个版本的参数为1个，而第3个版本的参数为2个，因为友员函数不含有this指针。
+- 由于类的友员函数不能使用私有成员，因此在这里使用第3个版本时需要把str成员的访问权限改为public。
+
+使用这两个'+' 操作符重载函数版本的执行结果:
+
+```c++
+//hello
+//hello world
+//hello world		对象a的str未改变
+//hello world
+```
+
+## 36.	编程题----各类运算符重载函数的编写
+
+```c++
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+class String{
+public:
+    //默认构造函数
+    String();
+
+    //普通构造函数
+    String(int n, char c);
+
+    //普通构造函数
+    String(const char *source);
+
+    //复制构造函数
+    String(const String &s);
+
+    //重载=，实现字符串赋值
+    String &operator=(char *s);
+
+    //重载= ,实现对象赋值
+    String &operator=(const String &s);
+
+    ~String();
+
+    //重载[],实现数组运算
+    char &operator[](int i);
+
+    //重载[]，实现字符运算，(对象为常量)
+    const char &operator[](int i) const;
+
+    //重载+=,实现与字符串相加
+    String &operator+=(const String &s);
+
+    //重载+=,实现与对象相加!
+    String &operator+=(const char *s);
+
+    //重载<<,实现输出流
+    friend ostream &operator<<(ostream &out, String &s);
+
+    //重载 >>，实现输入流
+    friend istream &operator>>(istream &in, String &s);
+
+    //重载<
+    friend bool operator<(const String &left, const String &right);
+
+    //重载 >
+    friend bool operator>(const String &left, const String &right);
+
+    //重载==
+    friend bool operator==(const String &left, const String &right);
+
+    //重载!=
+    friend bool operator!=(const String &left, const String &right);
+
+    char getData();
+    int length();
+
+private:
+    //data表示的字符串长度
+    int size;
+    //指向字符串数据
+    char *data;
+};
+
+//默认构造函数，构造空字符串
+String::String() {
+    //空字符串只含有'\0'一个元素
+    data = new char[1];
+    *data = '\O';
+    size = 0;
+}
+
+//普通构造函数
+String::String(int n, char c) {
+    //含有n个相同字符的字符串
+    data = new char[n + 1];
+    size = n;
+    //保存data
+    char *temp = data;
+    //做n次赋值
+    while (n--) {
+        *temp++ = c;
+    }
+    *temp = '\0';
+}
+
+//普通构造函数
+String::String(const char *source) {
+    //字符串内容与source相同
+    //source为NULL
+    if (source == NULL) {
+        //将data赋为空字符串
+        data = new char[1];
+        *data = '\0';
+        size = 0;
+    } else {
+        //复制source字符串
+        size = strlen(source);
+        data = new char[size + 1];
+        strcpy(data, source);
+    }
+}
+
+//复制构造函数
+String::String(const String &s) {
+    //字符串内容与对象s的相同
+    data = new char[s.size + 1];
+    strcpy(data, s.data);
+    size = s.size;
+}
+
+//=重载
+String &String::operator=(char *s) {
+    //目标需为字符串
+    if (data != NULL) {
+        delete[]data;
+    }
+    size = strlen(s);
+    data = new char[size + 1];
+    strcpy(data, s);
+    //复制目标字符串
+    return *this;
+}
+
+//=重载
+String &String::operator=(const String &s) {
+    //日标为String对象
+    //如果对象s就是自己，直接返回*this
+    if (this == &s) {
+        return *this;
+    }
+    //释放data堆内存
+    if (data != NULL) {
+        delete[]data;
+    }
+    size = strlen(s.data);
+    //分配堆内存
+    data = new char[size + 1];
+    //复制对象s的字符串成员
+    strcpy(data, s.data);
+    return *this;
+}
+
+//析构函数
+String::~String() {
+    // data 不为NULL,释放堆内存
+    if (data != NULL) {
+        delete[]data;
+        data = NULL;
+        size = 0;
+    }
+}
+
+//[]重载
+char &String::operator[](int i) {
+    //取数组下标为i的字符元素
+    return data[i];
+}
+
+//[]重载
+const char &String::operator[](int i) const {
+    return data[i];
+}
+
+//+=重载
+String &String::operator+=(const String &s) {
+    int len = size + s.size + 1;
+    char *temp = data;
+    //申请足够的堆内存来存放连接后的字符串
+    data = new char[len];
+    //更新字符出长度
+    size = len - 1;
+    //复制原来的字符串
+    strcpy(data, temp);
+    //连接目标对象内的字符串成员
+    strcat(data, s.data);
+
+    delete[]temp;
+    return *this;
+}
+
+int String::length() {
+    return size;
+}
+
+//+=重载
+String &String::operator+=(const char *s) {
+    //连接s字符串
+    if (s == NULL) {
+        return *this;
+    }
+    int len = size + strlen(s) + 1;
+    char *temp = data;
+    //申请足够的堆内存来存放连接后的字符串
+    data = new char[len];
+    size = len - 1;
+    //复制原来的字符串
+    strcpy(data, temp);
+    //连接目标字符串
+    strcat(data, s);
+    delete[]temp;
+    return *this;
+}
+
+//<<重载
+ostream &operator<<(ostream &out, String &s) {
+    //打印对象s内字符串成员的所有字符元素
+    for (int i = 0; i < s.length(); i++) {
+        //输出字符串中每一-个字符元素
+        out << s[i] << "";
+    }
+    return out;
+}
+
+//>>重载
+istream &operator>>(istream &in, String &s) {
+    char p[50];
+    //从输入流接收最多50个字符
+    in.getline(p,50);
+    //调用赋值函数
+    s=p;
+    return in;
+}
+
+bool operator<(const String &left, const String &right) {
+    int i = 0;
+    while(left[1] == right[i] && left[i] != 0 && right[i] != 0){
+        i++;
+    }
+    return left[i] - right[i] < 0;
+}
+
+bool operator>(const String &left, const String &right) {
+    int i = 0;
+    while(left[1] == right[i] && left[i] != 0 && right[i] != 0){
+        i++;
+    }
+    return left[i] - right[i] > 0;
+}
+```
+
+- 友员函数不能访问String类的私有成员，但由于重载了]操作符，所以采取使用对象索引(left[i]和right[i])的方式访问。
+- 不能使用字符串复制(私有成员data 不能访问)，而是调用赋值函数给对象s赋字符串的内容(代码第224行)。
+
+```c++
+int main(void) {
+    //普通构造函数测试
+    String str(3, 'a');
+    //复制构造函数测试
+    String str1(str);
+    //普通构造函数
+    String str2(" asdf");
+    //默认构造函数测试
+    String str3;
+    cout << "str:" << str << endl;
+    cout << "str1: " << str1 << endl;
+    cout << "str2:" << str2 << endl;
+    cout << "str3: " << str3 << endl;
+    //賦值函数测试
+    str3 = str2;
+    cout << "str3: " << str3 << endl;
+    //赋值函数测试
+    str3 = "12ab";
+    cout << "str3: " << str3 << endl;
+    //[]重载函数测试
+    cout << "str3[2] =" << str3[2] << endl;
+    //+=重载函数测试
+    str3 += "111";
+    cout << "str3: " << str3 << endl;
+    //+=重载函数测试
+    str3 += str1;
+    cout << "str3: " << str3 << endl;
+    // >>重载函数测试
+    cin >> str1;
+    cout << "str1: " << str1 << endl;
+    String t1 = "1234";
+    String t2 = "1234";
+    String t3 = "12345";
+    String t4 = "12335";
+    // == 重载函数测试
+    cout << "t1==t2?" << (t1 == t2) << endl;
+    // <重载函数测试
+    cout << "t1<t3?" << (t1 < t3) << endl;
+    // >重载函数测试
+    cout << "t1 > t4?" << (t1 > t4) << endl;
+    // !=重载函数测试
+    cout << "t1!=t4?" << (t1 != t4) << endl;
+    return 0;
+}
+
+//str:aaa
+//str1: aaa
+//str2: asdf
+//str3:
+//str3:  asdf
+//str3: 12ab
+//str3[2] =a
+//str3: 12ab111
+//str3: 12ab111aaa
+//123 456 abc def       输入
+//str1: 123 456 abc def
+//t1==t2?1
+//t1<t3?1
+//t1 > t4?1
+//t1!=t4?1
+```
+
+## 37.	看代码写输出----new操作符重载的使用
+
+```c++
+#include <malloc.h>
+#include <memory.h>
+#include <iostream>
+
+using namespace std;
+
+class Blanks{
+public:
+    Blanks(){
+        cout<<"构造"<<endl;
+    };
+
+    void *operator new(size_t stAllocateBlock, char chInit);
+};
+
+void *Blanks::operator new(size_t stAllocateBlock, char chInit) {
+    void *pvTemp = malloc(stAllocateBlock);
+    if (pvTemp != 0)
+        memset(pvTemp, chInit, stAllocateBlock);
+    return pvTemp;
+}
+
+int main() {
+    Blanks *a5 = new(0xa5) Blanks ;
+    cout<<"---------"<<endl;
+    return a5 != 0;
+}
+//构造
+//---------
+```
+
+- 重载new操作符第一个参 数必须是size_t类型的，并且传入的值就是类的大小。本题中类的大小为1。如果类中含有一个int 类型成员(int 占4个字节)，那么参数stAllocateBlock的值为4。
+- 代码第24行中的0xa5表示第二个参数的大小，也就是chInit为0xa5。Blanks也是一个参数。
+- 代码第19行，用chInit初始化分配的那块内存。
+- 当执行代码第24行时，首先调用Blanks重载的new操作符函数，然后使用默认的构造函数初始化对象，最后用这个Blanks对象地址初始化a5。
