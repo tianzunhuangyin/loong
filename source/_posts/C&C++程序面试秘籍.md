@@ -5979,3 +5979,1465 @@ int main() {
 - 代码第24行中的0xa5表示第二个参数的大小，也就是chInit为0xa5。Blanks也是一个参数。
 - 代码第19行，用chInit初始化分配的那块内存。
 - 当执行代码第24行时，首先调用Blanks重载的new操作符函数，然后使用默认的构造函数初始化对象，最后用这个Blanks对象地址初始化a5。
+
+# 7.	C++继承和多态
+
+## 1.	C++类继承的三种关系
+
+C++中继承主要有三种关系: public、 protected 和private。
+
+- public继承
+
+publice继承是一种接口继承，子类可以代替父类完成父类接口所声明的行为。此时子类可以自动转换成为父类的接口，完成接口转换。从语法角度上来说，public 继承会保留父类中成员(包括函数和变量等)的可见性不变，也就是说，如果父类中的某个函数是public的，那么在被子类继承后仍然是public的。
+
+- protected继承
+
+protected继承是一种实现继承， 子类不能代替父类完成父类接口所声明的行为，此时子类不能自动转换成为父类的接口。从语法角度上来说，protected 继承会将父类中的public可见性的成员修改成为protected可见性，相当于在子类中引入了protected 成员，这样在子类中同样还是可以调用父类的protected和public成员，子类的子类也就可以调用被protected继承的父类的protected和public成员。
+
+- private继承
+
+private继承是一种实现继承，子类不能代替父类完成父类接口所声明的行为，此时子类不能自动转换成为父类的接口。从语法角度上来说，private继承会将父类中的public 和protected可见性的成员修改成为private可见性。这样一来，虽然子类中同样还是可以调用父类的protected和public成员，但是子类的子类就不可以再调用被private继承的父类的成员了。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Base{
+protected:
+    void printProtected() { cout << "print Protected" << endl; }
+
+public:
+    void printPublic() { cout << "print Public" << endl; }
+};
+
+//protected继承
+class Derived1 : protected Base{
+};
+
+//private继承
+class Derived2 : private Base{
+};
+
+class A : public Derived1{
+public:
+    void print() {
+        printProtected();
+        printPublic();
+    }
+};
+
+class B : public Derived2{
+public:
+    void print() {
+        //编译错误，不能访问
+        printProtected();
+        //编译错误，不能访问
+        printPublic();
+    }
+};
+
+int main() {
+    class A a;
+    class B b;
+    a.print();
+    b.print();
+    return 0;
+}
+```
+
+Derived1类通过protected继承Base类，因此它的派生类A**可以**访问Base 基类的protected和public成员函数。
+
+Derived2类通过private继承Base类，因此它的派生类B**不可以**访问Base基类的任何成员函数。
+
+## 2.	C++继承关系
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Parent{
+public:
+    Parent(int var = -1) {
+        m_nPub = var;
+        m_nPtd = var;
+        m_nPrt = var;
+    }
+
+public:
+    int m_nPub;
+protected:
+    int m_nPtd;
+private:
+    int m_nPrt;
+};
+
+class Child1 : public Parent{
+public:
+    int getPub() { return m_nPub; }
+
+    //m_nPtd 实际为protected
+    int getPtd() { return m_nPtd; }
+
+    //A  error
+    int getPrt() { return m_nPrt; }
+};
+
+class Child2 : protected Parent{
+public:
+    //m_nPub,m_nPtd 实际为protected
+    int getPub() { return m_nPub; }
+
+    int getPtd() { return m_nPtd; }
+
+    //B error
+    int getPrt() { return m_nPrt; }
+};
+
+class Child3 : private Parent{
+
+public:
+
+    int getPub() { return m_nPub; }
+
+    int getPtd() { return m_nPtd; }
+
+    //C error
+    int getPrt() { return m_nPrt; }
+
+};
+
+int main(){
+    Child1 cd1;
+    Child2 cd2;
+    Child3 cd3;
+    int nVar = 0;
+    // public inherited
+    //D correct
+    cd1.m_nPub = nVar;
+    //E error
+    cd1.m_nPtd = nVar;
+    //F correct
+    nVar = cd1.getPtd();
+
+    //protected inherited
+    //G error
+    cd2.m_nPub = nVar;
+    //H correct
+    nVar = cd2.getPtd();
+
+    //private inherited
+    //I error
+    cd3.m_nPub = nVar;
+    //J correct
+    nVar = cd3.getPtd();
+    return 0;
+}
+```
+
+A、B、C错误。m_nPrt是基类Parent的私有变量，不能被派生类访问。
+
+D正确。Child1是public继承，可以访问并修改基类Parent的public成员变量。
+
+E错误。26行中，m_nPtd 是基类Parent的protected 成员变量，通过公有继承后变成了派生类Child1的protected成员，因此只能在Child1类内部访问，不能使用Child1对象访问。
+
+F正确。可以通过Child1类的成员函数访问其protected变量。
+
+G错误。**Child2 是protected继承，其基类Parent的public和protected成员变成了它的Protected成员，因此m_nPub 只能在Child2类内部访问，不能使用Child2对象访问**。
+
+H正确。可以通过Child2类的成员函数访问其protected变量。
+
+I错误。**Child3 是private继承，其基类Parent的public和protected成员变成了它的private成员，因此m_ nPub只能在Child2类内部访问，不能使用Child2对象访问**。
+
+J正确。可以通过Child3类的成员函数访问其private变量。
+
+## 3.	看代码找错----C+ +继承
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class base{
+private:
+    int i;
+public:
+    base(int x) { i = x; }
+};
+
+class derived : public base{
+private:
+    int i;
+public:
+    derived(int x, int y) { i = x; }
+
+    void printTotal() {
+        int total = i + base::i;
+        cout << "total =" << total << endl;
+    }
+};
+
+int main() {
+    derived d(1, 2);
+    d.printTotal();
+    return 0;
+}
+```
+
+(1)在derived类进行构造时，它首先要调用其基类(base 类)的构造方法，由于没有指明何种构造方法，因此默认调用base类不带参数的构造方法。然而，基类base中已经定义了带一个参数的构造函数，所以编译器就不会给它定义默认的构造函数了。因此代码第16行会出现“找不到构造方法”的编译错误。解决办法:可以在derived的构造函数16行显式调用base的构造函数。
+
+```c++
+//改法1
+// derived(int x, int y):base(y),i(x){}; 
+/*改法二
+derived(int x, int y) : base(y){
+    i = x;
+}*/
+```
+
+(2)在derived类的printTotal()中， 使用base:i的方式调用base类的私有成员i，这样会得到“不能访问私有成员”的编译错误。解决办法:把成员i的访问权限设为public。
+
+## 4.	私有继承有什么作用
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Person{
+public:
+    void eat() { cout << "Person eat" << endl; }
+};
+
+//私有继承
+class Student : private Person{
+public :
+    void study() { cout << "Student Study" << endl; }
+};
+int main()
+{
+    Person p;
+    Student s;
+    p.eat();
+    s.study();
+    //编译错误
+    s.eat();
+    //编译错误
+    p=s;
+    return 0;
+}
+```
+
+此程序的两个编译错误分别说明了私有继承的两个规则。
+
+第一个规则正如大家现在所看到的，和公有继承相反，如果两个类之间的继承关系为私有，编译器一般不会将派生类对象(如Student)转换成基类对象( 如Person)。这就是代码第24行失败的原因。
+
+第二个规则是，**从私有基类继承而来的成员都成为了派生类的私有成员——即使它们在基类中是保护或公有成员**。这就是代码第22行失败的原因。
+
+可以看出，私有继承时派生类与基类不是“is a”的关系，而是意味着“Is-Implement-In-Terms-Of" (以 ....实现)。如果使类D私有继承于类B，这样做是因为你想**利用类B中已经存在的某些代码**，而不是因为类B的对象和类D的对象之间有什么概念上的关系。因此，私有继承在**软件“设计”过程中毫无意义**，只是在**软件“实现"时才有用**。
+
+## 5.	私有继承和组合有什么相同点和不同点
+
+使用组合表示“有一个(Has-A)” 的关系。如果在组合中需要使用一个对象的某些方法，则完全可以利用私有继承代替。
+
+私有继承下派生类会获得基类的一份备份，同时得到了访问基类的公共以及保护接口、的权力和重写基类虚函数的能力。它意味着“以...实现(Is-Implement-In-Terms-Of)"， 它是组合的一种语法上的变形(聚合或者“有一个”)。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Engine{
+public:
+    //Engine构造函数
+    Engine(int num) : numCylinders(num) {} 
+    void start() {
+        cout << "Engine start, " << numCylinders << "cylinders" << endl;
+    }
+
+private:
+    int numCylinders;
+};
+
+//私有继承
+class Car_pri : private Engine{
+public:
+    Car_pri() : Engine(8) {}
+
+    //调用基类的构造函数
+    void start() {
+        //调用基类的start()
+        Engine::start();
+    }
+};
+
+class Car_comp{
+private:
+    //组合Engine类对象
+    Engine engine;
+
+public:
+    //给engine成员初始化
+    Car_comp() : engine(8) {}
+
+    void start() {
+        //调用engine的start()
+        engine.start();
+    }
+};
+
+int main() {
+    Car_pri car_pri;
+    Car_comp car_comp;
+    car_pri.start();
+    car_comp.start();
+    return 0;
+}
+//Engine start, 8cylinders
+//Engine start, 8cylinders
+```
+
+由此看出，“有一个”关系既可以用**私有继承**表示，也可以用单一组合表示。
+
+类Car_pri和类Car_comp有很多**相似点**:
+
+- 它们都只有一个Engine被确切地包含于Car中。
+- 它们在外部都不能进行指针转换，如将Car_pri \*转换为Engine \*。
+- 它们都有一个start()方法，并且都在包含的Engine对象中调用start()方法。
+
+也有下面一些**区别**:
+
+- 如果想让每个Car都包含若干Engine,那么只能用单一组合的形式。
+- 私有继承形式可能引入不必要的多重继承。
+- 私有继承形式允许Car的成员将Car \*转换成Engine \*。
+- 私有继承形式允许访问基类的保护( protected)成员。
+- 私有继承形式允许Car重写Engine的虛函数。
+
+**尽可能使用组合，万不得已才用私有继承。**
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+//抽象
+struct Base{
+public:
+    //纯虚函数
+    virtual void Func1() = 0;
+
+    //纯虚函数
+    virtual void Func2() = 0;
+
+    void print() {
+        //调用派生类的Fun1()
+        Func1();
+        //调用派生类的Fun1()
+        Func2();
+    }
+};
+
+struct T : private Base{
+public:
+    //覆盖基类的Fun1
+    virtual void Func2() { cout << "Func2" << endl; }
+
+    //覆盖基类的Fun2
+    virtual void Func1() { cout << "Func1" << endl; }
+
+    void UseFunc() {
+        //调用基类的print()
+        Base::print();
+    }
+};
+
+int main() {
+    T t;
+    t.UseFunc();
+    return 0;
+}
+//Func1
+//Func2
+```
+
+上面的代码中Base类含有纯虛函数Fun1())以及Fun2()，因此它为抽象类，它通过虚函数调用了T中的重写版本。这种情况就不能使用组合了，因为**组合的对象关系中不能使用一个抽象类，抽象类不能被实例化**。
+
+相同点:都可以表示“有一个”关系。
+
+不同点:私有继承中派生类能访问基类的protected成员，并且可以重写基类的虚函数，甚至当基类是抽象类的情况。组合不具有这些功能。
+
+## 6.	什么是多态
+
+多态( Polymorphism)、封装( Encapsulation)和继承(Inheritance) 是面向对象思想的“三大特征”。可以说，不懂得什么是多态就不能说懂得面向对象。
+
+多态性的定义:同一操作作用于不同的对象，可以有不同的解释，产生不同的执行结果。
+
+有两种类型的多态性:
+
+- 编译时的多态性。编译时的多态性是通过重载来实现的。对于非虚的成员来说，系统在编译时，根据传递的参数、返回的类型等信息决定实现何种操作。
+- 运行时的多态性。运行时的多态性就是指直到系统运行时，才根据实际情况决定实现何种操作。C++中，运行时的多态性通过虚成员实现。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Person{
+public :
+    virtual void print() { cout << "I'm a Person" << endl; }
+};
+
+class Chinese : public Person{
+public:
+    virtual void print() { cout << "I'm from China" << endl; }
+};
+
+class American : public Person{
+public :
+    virtual void print() { cout << "I'm from USA" << endl; }
+};
+
+void printPerson(Person &person) {
+    //运行时决定调用哪个类中的print()函数
+    person.print();
+}
+
+int main() {
+    Person p;
+    Chinese c;
+    American a;
+    printPerson(p);
+    printPerson(c);
+    printPerson(a);
+    return 0;
+}
+//I'm a Person
+//I'm from China
+//I'm from USA
+```
+
+可以看到，在运行时通过基类Person的对象，可以来调用派生类Chinese和American中的实现方法。Chinese 和American的方法都是通过覆盖基类中的虛函数方法来实现的。
+
+## 7.	√虚函数是怎么实现的
+
+简单地说，虚函数是通过虚函数表实现的。那么，什么是虚函数表呢?
+
+事实上，如果一个类中含有虚函数，则系统会为这个类分配一个指针成员指向一张虚函数表(vtbl),表中每一项指向一个虚函数的地址，实现上就是一个函数指针的数组。
+
+```c++
+class Parent{
+public:
+    virtual void foo1() {}
+
+    virtual void foo2() {}
+
+    void foo3();
+};
+
+class Child1{
+public:
+    void foo1() {}
+
+    void foo3();
+};
+
+class Child2{
+public:
+    void foo1() {}
+
+    void foo2() {}
+
+    void foo3();
+};
+```
+
+列出了各个类的虚函数表(vtbl) 的内容。
+
+Parent类的vtbl: Parent::foo10的地址、 Parent::foo10。
+
+Child1类的vtbl: Chil:foo1()的地址、 Parent::foo1()。
+
+Child2类的vtbl: Childl::foolO的地址、 Child2::foo1()。
+
+可以看出，虛函数表既有继承性，又有多态性。每个派生类的vtbl 继承了它各个基类的vtbl,如果基类vtbl中包含某一项，则其派生类的vtbl中也将包含同样的一项，但是两项的值可能不同。**如果派生类覆盖(override)了该项对应的虚函数，则派生类vtbl的该项指向重载后的虚函数**，没有重载的话，则沿用基类的值。
+
+:question:在类对象的内存布局中，首先是该类的vtbl 指针，然后才是对象数据。在通过对象指针调用一个虚函数时，编译器生成的代码将先获取对象类的vtbl 指针，然后调用vtbl 中对应的项。对于通过对象指针调用的情况，在编译期间无法确定指针指向的是基类对象还是派生类对象，或者是哪个派生类的对象。但是在运行期间执行到调用语句时，这一点已经确定，编译后的调用代码能够根据具体对象获取正确的vtbl, 调用正确 的虚函数，从而实现多态性。
+
+分析一下这里的思想所在，问题的实质是这样，对于发出虚函数调用的这个对象指针，在编译期间缺乏更多的信息，而在运行期间具备足够的信息，但那时已不再进行绑定了,怎么在二者之间做一个过渡呢?把绑定所需的信息用一种通用的数据结构记录下来，该数据结构可以同**对象指针相联系**，在编译时只需要使用这个数据结构进行抽象的绑定，而在运行期间将会得到真正的绑定。这个数据结构就是vtbl。可以看到，实现用户所需的抽象和多态需要进行后绑定，而编译器又是通过抽象和多态实现后绑定的。
+
+## 8.	构造函数调用虚函数
+
+```c++
+#include <stdio.h>
+
+class A{
+public:
+
+    A() { doSth(); }
+
+    // 构造函数调用虚函数
+    virtual void doSth() { printf("I am A"); }
+};
+
+class B : public A{
+public :
+    virtual void doSth() { printf("I am B"); }
+};
+
+int main() {
+    B b;
+    return 0;
+}
+//I am A
+```
+
+**在构造函数中，虚拟机制不会发生作用**，因为基类的构造函数在派生类构造函数之前执行，当基类构造函数运行时，派生类数据成员还没有被初始化。如果基类构造期间调用的虚函数向下匹配到派生类，派生类的函数理所当然会涉及本地数据成员，但是那些数据成员还没有被初始化，而调用涉及一个对象还没有被初始化的部分自然是危险的，所以C++会提示此路不通。因此，虚函数不会向下匹配到派生类，而是直接执行基类的函数。
+
+## 9.	看代码写结果----虚函数的作用
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class A{
+public :
+    A() {
+
+    }
+
+    virtual void print(void) {
+        cout << "A::print()" << endl;
+    }
+
+    A (const A&) {
+        cout << "copy" << endl;
+    }
+};
+
+class B : public A{
+public:
+    virtual void print(void) {
+        cout << "B::print()" << endl;
+    }
+};
+
+class C : public A{
+public:
+    void print(void) {
+        cout << "C::print()" << endl;
+    }
+};
+
+void print(A a) {
+    a.print();
+}
+
+int main(void)
+{
+    A a, *pa, *pb,*pc;
+    B b;
+    C c;
+
+    pa = &a;
+    pb = &b;
+    pc = &c;
+
+    a.print();
+    b.print();
+    c.print();
+
+    pa->print();
+    pb->print();
+    pc->print();
+
+    print(a);
+    print(b);
+    print(c);
+}
+//A::print()
+//B::print()
+//C::print()
+//A::print()
+//B::print()
+//C::print()
+//copy
+//A::print()
+//copy
+//A::print()
+//copy
+//A::print()
+```
+
+代码第40~42行，分别使用类A、类B和类C的各个对象来调用其print)成员函数，因此执行的是各个类的print()成员函数。
+
+代码第44~46行，使用3个类A的指针来调用print()成员函数，而这3个指针分别指向类A、类B和类C的3个对象。由于print()函数是虚函数，因此这里有多态，执行的是各个类的print()成员函数。
+
+代码第48~0行，全局的print()函数的参数使用**传值的方式**(注意与传引用的区别，如果是引用，则又是多态)，在对象a、b、c分别传入时，在函数栈中会调用**复制构造函数**分别生成类A的临时对象，因此执行的都是类A的print()成员函数。
+
+## 10.	看代码写结果----虚函数
+
+```c++
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void println(const std::string &msg) {
+    cout << msg << "\n";
+}
+
+class Base{
+public:
+    Base() {
+        println("Base::Base()");
+        virt();
+    }
+
+    void f() {
+        println("Base::f()");
+        virt();
+    }
+
+    virtual void virt() {
+        println("Base::virt()");
+    }
+};
+
+class Derived : public Base{
+public:
+    Derived() {
+        println("Derived::Derived()");
+        virt();
+    }
+
+    virtual void virt() {
+        println("Derived::virt()");
+    }
+};
+
+int main(int argc, char *argv[]) {
+    Derived d;
+    Base *pB = &d;
+    pB->f();
+    return 0;
+}
+
+//Base::Base()
+//Base::virt()
+//Derived::Derived()
+//Derived::virt()
+//Base::f()
+//Derived::virt()
+```
+
+代码第40行，构造Derived 对象d。首先调用Base的构造函数，然后调用Derived的构造函数。在Base类的构造函数中，又调用了虚函数virt()，**此时虚拟机制还没有开始作用(因为是在构造函数中)**，所以执行的是Base类的virt()函数。同样，**在Derived类的构造函数中，执行的是Derived类的virt()函数**。
+
+代码第42行，**通过Base类的指针pB访问Base类的公有成员函数f()**。f()函数又调用了虚函数virt(),这里出现**多态**。由于指针pB是指向Derived类对象的，因此实际执行的是Derived类中的virt()成员。
+
+## 11.	虚函数相关的选择题
+
+```c++
+#include <iostream>
+#include <complex>
+
+using namespace std;
+
+class Base{
+public:
+    Base() { cout << "Base-ctor" << endl; }
+
+    ~Base() { cout << "Base-dtor" << endl; }
+
+    virtual void f(int) { cout << "Base::f(int)" << endl; }
+
+    virtual void f(double) { cout << "Base::f (double) " << endl; }
+
+    virtual void g(int i = 10) { cout << "Base::g()" << i << endl; }
+};
+
+class Derived : public Base{
+public:
+    Derived() { cout << "Derived-ctor" << endl; }
+
+    ~Derived() { cout << "Derived-dtor" << endl; }
+
+    void f(complex<double> c) { cout << "Derived::f (complex)" << endl; }
+
+    virtual void g(int i = 20) { cout << "Derived:g()" << i << endl; }
+};
+
+int main() {
+    Base b;
+    Derived d;
+    Base *pb = new Derived;
+    cout << sizeof(Base) << endl;
+    cout << sizeof(Derived) << endl;
+    pb->f(1.0);
+    pb->g();
+    printf("sizeof(int *):%d\n", sizeof(int *));
+}
+
+//Base-ctor
+//Base-ctor
+//Derived-ctor
+//Base-ctor
+//Derived-ctor
+//8
+//8
+//Base::f (double)
+//Derived:g()10
+//Derived-dtor
+//Base-dtor
+//Base-dtor
+```
+
+- cout << sizeof(Base) << endl;
+    A.4 	B.32	C.20	<u>D.与平台相关</u>
+- cout << sizeof(Derived) << endl;
+    A.4	B.8	C.36	<u>D.与平台相关</u>
+- pb->f(1.0);
+    A. Deried::f(complex)	<u>B. Base::f(double)</u>	C. Base::f(int)	D. Deried:f(double)
+- pb->g();
+    A. Base:g()10	B. Base:g()20	<u>C. Derived::g()10</u>	D. Derived::g()20
+
+题(1)，Base 类没有任何数据成员，并且含有虚函数，所以系统会为它分配-一个指针指向虚函数表。指针的大小是4个字节(实际上取决于平台位数，如32位机，int 与指针都是4字节，而64位机则是8字节)。
+
+题(2)，Derived 类没有任何数据成员，它是Base的派生类，因此它继承了Base的虚函数表。系统也会为它分配一个指针指向这张虚函数表。
+
+题(3)，Base 类中定义了两个f()的重载函数，Derived 只有一个f()，其参数类型为complex，因此Derived并没有Base的f())进行覆盖。由于参数1.0默认是double类型的，因此调用的是Base:: f(double)。
+
+题(4)，Base和Derived都定义了含有相同参数列表的g(),因此这里发生多态了。**pb指针指向的是Derived类的对象，因此调用的是Derived类的g()**。这里要注意，由于**参数的值是在编译期就已经决定的，而不是在运行期，因此参数i应该取Base类的默认值，即10**。
+
+## 12.	为什么需要多重继承?它的优缺点是什么
+
+```c++
+#include <iostream>
+using namespace std ;
+class Person
+{
+public:
+    void sleep() {cout << "sleep" << endl;}
+    void eat() {cout << "eat" << endl;}
+};
+//Author继承自Person
+class Author : public Person
+{
+public:
+    void writeBook() {cout << "write Book" << endl;}
+};
+//Programmer继承自Person
+class Programmer : public Person {
+public:
+void writeCode() {cout << "write Code" << endl;}
+};
+//多重继承
+class Programmer_Author : public Programmer, public Author{};
+int main()
+{
+    Programmer_Author pa;
+    //调用基类 Author的方法
+    pa.writeBook();
+    //调用基类 Programmer的方法
+    pa. writeCode(); 
+    //编译错误，eat() 定义不明确
+    pa.eat();
+    //编译错误，sleep()定义不明确
+    pa.sleep();
+    return 0;
+}
+```
+
+多重继承的**优点**很明显，就是对象**可以调用多个基类中的接口**，如代码第26行与代码第28行对象pa分别调用Author类的writeBook()函数和Programmer类的writeCode()函数。
+
+多重继承的**缺点**是什么呢?如果**派生类所继承的多个基类有相同的基类**，而派生类对象需要调用这个**祖先类**的接口方法，就会**容易出现二义性**。代码第30、32行就是因为这个原因而出现编译错误的。因为通过多重继承的Programmer_Author类拥有Author类和Programmer类的一份拷 贝，而Author类和Programmer 类都分别拥有Person类的一份拷贝， 所以Programmer_ Author类拥有Person类的两份拷贝，在调用Person类的接口时，编译器会不清楚需要调用哪一份拷贝， 从而产生错误。对于这个问题，通常有两个解决方案:
+
+- 加上全局符确定调用哪一份拷 贝。比如pa.Autor::eat()调用属于Author的拷贝。
+
+- 使用虚拟继承，使得多重继承类Programmer_ Author只拥有Person 类的一份拷贝。
+
+    比如在第10行和第16行的继承语句中加入virtual 就可以了。
+
+```c++
+class Author : virtual public Person
+class Programmer : virtual public Person 
+```
+
+多重继承的**优点**是**对象可以调用多个基类中的接口**。
+
+多重继承的**缺点**是**容易出现继承向上的二义性**。
+
+## 13.	多重继承中的二义性
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class cat{
+public:
+    void show() {
+        cout << " cat" << endl;
+    }
+};
+
+class fish{
+public:
+    void show() {
+        cout << "fish" << endl;
+    }
+};
+
+class catfish : public cat, public fish{
+};
+int main()
+{
+    catfish obj ;
+    obj.show();
+    return 0;
+}
+```
+
+程序中catfish类多重继承cat类和fish类，因此继承了cat 的show()方法和fish的show()方法。由于这两个方法同名，代码第24行直接用obj.show()时，无法区分应该执行哪个基类的show(方法，因此会出现编译错误。
+
+## 14.	多重继承二义性的消除
+
+类A派生B和C,类D从B, C派生，如何将-一个类A的指针指向-一个类D的实例?
+
+即**如何消除多重继承引起的向上继承二义性问题**。
+
+```c++
+class A{
+};
+
+class B : public A{
+};
+
+class C : public A{
+};
+
+class D : public B, public C{
+};
+
+int main() {
+    D d;
+    //编译错误
+    A *pd = &d;
+    return 0;
+}
+```
+
+由于B、C继承自A, B、C都拥有A的一份拷贝，类D多重继承自B、C,因此拥有A的两份拷贝。如果此时一个类A的指针指向一个类D的实例，会出现“模糊的转换"之类的编译错误。
+
+将B,C都改为虚拟继承自A，消除二义性。
+
+## 15.	多重继承和虚拟继承
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Parent{
+public:
+    Parent() : num(0) { cout << "Parent" << endl; }
+
+    Parent(int n) : num(n) { cout << "Parent(int)" << endl; }
+
+private:
+    int num;
+};
+
+class Child1 : public Parent{
+public:
+    Child1() { cout << "Child1()" << endl; }
+
+    Child1(int num) : Parent(num) { cout << "Child1(int)" << endl; }
+};
+
+class Child2 : public Parent{
+public:
+    Child2() { cout << "Ch11d2()" << endl; }
+
+    Child2(int num) : Parent(num) { cout << "Child2(int)" << endl; }
+};
+
+class Derived : public Child1, public Child2{
+public:
+    Derived() : Child1(0), Child2(1) {}
+
+    Derived(int num) : Child2(num), Child1(num + 1) {}
+};
+
+int main() {
+    Derived d(4);
+    return 0;
+}
+```
+
+:a:**无virtual**继承的情况：
+
+**多重继承类对象的构造顺序与其<u>继承列表</u>中基类的排列顺序一致**，而不是与构造函数的初始化列表顺序一致。在这里，Derived 继承的顺序是Child1、Child2 (第29行)，因此按照下面的步骤构造。
+
+- 构造Child1。 由于Child1继承自Parent， 因此先调用Parent的构造函数，再调用Child1的构造函数。
+- 调用Child2。过程与(1) 类似，先调用Parent的构造函数，再调用Child2的构造函数。
+- 调用Derived类的构造函数。
+
+```c++
+//Parent(int)
+//Child1(int)
+//Parent(int)
+//Child2(int)
+```
+
+:b:都为虚继承的情况：
+
+当Child1和Child2为虚拟继承时，当系统碰到多重继承的时候就会自动先加入一个虚拟基类(Parent) 的拷贝，即首先调用了虚拟基类(Parent) 默认的构造函数，然后再调用派生类(Child1和Child2)的构造函数和自己(Derived)的构造函数。由于只生成一份拷贝，因此以后再也不会调用虚拟基类(Parent) 的构造函数了，在Child1和Child2指定调用Parent的构造函数就无效了。
+```c++
+//Parent
+//Child1(int)
+//Child2(int)
+```
+
+现在来总结一下，**多继承中的构造函数顺序**如下: 
+
+- 任何虚拟基类的构造函数按照它们被继承的顺序构造。
+- 任何非虚拟基类的构造函数按照它们被构造的顺序构造。
+- 任何成员对象的构造按照它们声明的顺序调用。
+- 类自身的构造函数。
+
+## 16.	为什么要引人抽象基类和纯虚函数
+
+纯虚函数在基类中是没有定义的，必须在子类中加以实现，很像Java中的接口函数。如果基类含有一个或多个纯虚函数，那么它就属于抽象基类，不能被实例化。
+
+为什么要引入抽象基类和纯虚函数呢?原因有以下两点:，
+
+- 为了方便使用多态特性。
+- 在很多情况下，基类本身生成对象是不合情理的。例如，动物作为一个基类可以派生出老虎、狮子等子类，但动物本身生成对象明显不合常理。抽象基类不能够被实例化，它定义的纯虚函数相当于接口，能把派生类的共同行为提取出来。
+
+```c++
+#include<iostream>
+
+using namespace std;
+
+class Animal{
+public:
+    //纯虚函数，必须在派生类被定义
+    virtual void sleep() = 0;
+
+    //纯虚函数，必须在派生类被定义
+    virtual void eat() = 0;
+};
+
+class Tiger : public Animal{
+public:
+    void sleep() { cout << "Tiger sleep" << endl; }
+
+    void eat() { cout << "Tiger eat" << endl; }
+};
+
+class Lion : public Animal{
+public:
+    void sleep() { cout << "Lion sleep" << endl; }
+
+    void eat() { cout << "Lion eat" << endl; }
+};
+
+int main() {
+    //Animal指针，不能使用Animal animal定义对象
+    Animal *p;
+    Tiger tiger;
+    Lion lion;
+    //指向Tiger对象
+    p = &tiger;
+    //调用Tiger: :sleep()
+    p->sleep();
+    //调用Tiger::eat()
+    p->eat();
+    //指向Lion对象
+    p = &lion;
+    //调用Lion: :sleep()
+    p->sleep();
+    //调用Lion::eat()
+    p->eat();
+}
+//Tiger sleep
+//Tiger eat
+//Lion sleep
+//Lion eat
+```
+
+实际上，利用抽象类Animal把动物的共同行为抽出来了，那就是:不管是什么动物，都需要睡觉和吃食物。在上面的代码中，Animal有两个纯虚函数分别对应这两个行为，因此Animal为抽象基类，不能被实例化。Animal 的两个纯虚函数sleep()和eat()在它的子类Tiger和Lion中都被定义了(如果子类中有一个基类的纯虚函数没有定义，那么子类也是抽象类)。虽然**不能使用Animal animal的方式生成Animal对象**，但可以使用Animal的指针指向Animal的派生类Tiger和Lion,**使用指针调用Animal类中的接口(纯虚函数)完成多态**。
+
+## 17.	虚函数与纯虚函数有什么区别?
+
+虚函数和纯虚函数有以下方面的区别。
+
+- 类里如果声明了虚函数，这个函数是实现的，哪怕是空实现，它的作用就是为了能让这个函数在它的子类里面可以被覆盖，这样编译器就可以使用**后期绑定来达到多态**了。纯虚函数只是一个接口，**是个函数的声明而已，它要留到子类里去实现**。
+- **虛函数在子类里面也可以不重载**;但**纯虚函数必须在子类去实现**，这就像Java的接口一样。通常把很多函数加上virtual, 是一个好的习惯，虽然牺牲了一些性能，但是增加了面向对象的多态性，因为很难预料到父类里面的这个函数不在子类里面不去修改它的实现。
+- 虚函数的类用于“实作继承”，也就是说**继承接口的同时也继承了父类的实现**。当然，大家也可以完成自己的实现。纯虚函数的类用于“介面继承”，即纯虚函数关注的是接口的统一性， **实现由子类完成**。
+- 带**纯虚函数的类叫虚基类**，这种基类**不能直接生成对象**，而只有被继承，并重写其虚函数后，才能使用。这样的类**也叫抽象类**。
+
+## 18.	程序找错----抽象类不能实例化
+
+```c++
+#include<iostream>
+
+using namespace std;
+
+class Shape{
+public:
+    Shape() {}
+
+    ~Shape() {}
+
+    virtual void Draw() = 0;
+};
+
+int main() {
+    Shape s1;
+    //Shape *s1
+    return 0;
+}
+```
+
+Shape类的Draw()函数是一个纯虚函数，因此Shape类就是个抽象类，它是不能实例化一个对象的。因此代码第15行出现编译错误。解决办法是把Draw函数修改成**一般的虚函数**或者把s1定义成Shape的指针。
+
+## 19.	应用题----用面向对象的方法进行设计
+
+编写与一个图形相关的应用程序，需要处理大量图形(Shape) 信息。图形有矩形(Rectangle)、正方形(Square)、 圆形(Circle) 等种类，应用需要计算这些图形的面积，并且可能需要在某个设备上进行显示(使用在标准输出上打印信息的方式作为示意)。
+
+```c++
+#include <iostream>
+
+using namespace std;
+#define PI 3.14159
+
+class Shape{
+public:
+    Shape(){};
+
+    ~Shape(){};
+
+    //纯虚函数
+    virtual double Area() = 0;
+
+    virtual void Draw() = 0;
+};
+
+class Rectangle : public Shape{
+public:
+    Rectangle() : a(0), b(0) {}
+
+    Rectangle(int x, int y) : a(x), b(y) {}
+
+    virtual void Draw() {
+        cout << "Rectange , area is:" << Area() << endl;
+    }
+
+    virtual double Area() {
+        return a * b;
+    }
+
+private:
+    int a;
+    int b;
+};
+
+class Circle : public Shape{
+public:
+    Circle(double x) : r(x) {}
+
+    virtual void Draw() {
+        cout << "Circle ，area is :" << Area() << endl;
+    }
+
+    virtual double Area() {
+        return PI * r * r;
+    }
+
+private:
+    double r;
+};
+
+class Square : public Rectangle{
+public:
+    Square(int length) : a(length) {}
+
+    virtual void Draw() {
+        cout << "Square, area: " << Area() << endl;
+    }
+
+    virtual double Area() {
+        return a * a;
+    }
+
+private:
+    int a;
+};
+
+int main() {
+    Rectangle rect(10, 20);
+    Square square(10);
+    Circle circle(8);
+
+    //抽象类指针
+    Shape *p;
+    p = &rect;
+    //调用Rectang1e: :Area()
+    cout << p->Area() << endl;
+    //调用Rectang1e: :Draw()
+    p->Draw();
+
+    p = &square;
+    //调用 Square: :Area()
+    cout << p->Area() << endl;
+    //调用Square: :Draw()
+    p->Draw();
+
+    p = &circle;
+    //调用 Circle: :Area()
+    cout << p->Area() << endl;
+    //调用Circle: :Draw()
+    p->Draw();
+    return 0;
+}
+//200
+//Rectange , area is:200
+//100
+//Square, area: 100
+//201.062
+//Circle ，area is :201.062 
+```
+
+在主函数中，使用了Shape类的指针去访问不同图形类的Draw(和Area(方法。这样，Shape类中的Draw()和Area()纯虚函数就被认为是**接口**，只要使用Shape类指针操作这些接口就可以了，而不用关心是子类中的具体实现。
+
+实际上，正方形也可以直接继承自Shape 类，但由于正方形可以看成是长和宽相等的长方形，可以认为是一种特殊的长方形，所以这里它继承自Rectangle 类。
+
+这样做的好处是操作方便，比如说在Rectangle中如果存在一-个如下的虚函数:
+
+```c++
+virtual void foo(){cout << "Rectangle" << endl;}
+```
+
+注意，这个虚函数表示的是长方形的行为，而不是属于形状(Shape) 的行为，并且如果这个foo()同时也属于正方形的行为，那么可以在Square类中对其进行覆盖。
+
+```c++
+virtual void foo(){cout << "SQuare" << endl;}
+```
+
+于是可以**用Rectangle类指针操作Square类对象以达到多态**。
+
+当然，也会带来一些性能 上的问题。大家知道，Square类继承Rectangle类，于是Square继承了Rectangle的虚表。如果Rectangle存在不同于Shape类的虛函数，则这张虚表所包括的项目就会增加。因此Square会有更多的虚表使用开销，导致程序执行效率上的下降。
+
+## 20.	什么是COM
+
+COM即组件对象模型，是Component Object Model取前3个字母的缩写，这3个字母在当今Windows的世界中随处可见。随时涌现出来的大把的新技术都以COM为基础。各种文档中也充斥着诸如COM对象、接口、服务器之类的术语。
+
+简单地说，**COM是一种跨应用和语言共享二进制代码的方法**。与C++不同，它提倡源代码重用。源码级重用虽然好，但只能用于C++。它还带来了名字冲突的可能性，更不用说不断拷贝重用代码而导致工程膨胀和臃肿。
+
+Windows使用DLLs (动态链接库)在二进制级共享代码。这也是Windows程序运行的关键一重用 kermel32.dll, user32.dll 等。但DLLs是针对C接口而写的，它们只能被C或理解C调用规范的语言使用。由编程语言来负责实现共享代码，而不是由动态链接库本身。这样的话，动态链接库的使用受到限制。
+
+COM通过**定义二进制标准**解决了这些问题。这是因为COM明确指出二进制模块(动态链接库和可执行文件)必须被编译成与指定的结构匹配。这个标准也确切地规定了在内存中如何组织COM对象。COM定义的二进制标准还必须**独立于任何编程语言**(如C++中的命名修饰)。一旦满足了这些条件，就可以轻松地从**任何编程语言中存取这些模块**。由编译器所负责产生的二进制代码与标准兼容。这样使后来的人就能更容易地使用这些二进制代码。
+
+在内存中，COM对象的这种标准形式在C++虛函数中偶尔用到，所以这就是许多COM代码使用C++的原因。但是记住，与编写模块所用的语言是无关的，因为结果二进制代码为所有语言可用。
+
+## 21.	COM组件有什么特点
+
+COM组件是遵循COM规范编写、以Win32动态链接库(DLL)或可执行文件(EXE)形式发布的可执行二进制代码，能够满足对组件架构的所有需求。遵循COM的规范标准，组件与应用、组件与组件之间可以互操作，极其方便地建立可伸缩的应用系统。COM是一种技术标准，其商业品牌则称为ActiveX。
+
+组件在应用开发方面具有以下特点。
+
+- 组件是与开发工具语言无关的。开发人员可以根据特定情况选择特定语言工具实现组件的开发。编译之后的组件以二进制的形式发布，可跨Windows平台使用，而且源程序代码不会外泄，有效地保证了组件开发者的版权。
+- 通过接口有效保证了组件的复用性。一个组件具有若干个接口，每个接口代表组件的某个属性或方法。其他组件或应用程序可以设置或调用这些属性和方法来进行特定的逻辑处理。组件和应用程序的连接是通过其接口实现的。负责集成的开发人员无须了解组件功能是如何实现的，只需简单地创建组件对象并与其接口建立连接。在保证接口一致性的前提之下，可以调换组件、更新版本，也可以把组件安插在不同的应用系统中。
+- 组件运行效率高，便于使用和管理。因为组件是二进制代码，所以运行效率比ASP脚本高很多。核心的商务逻辑计算任务必须由组件来担当，ASP脚本只起组装的角色。而且组件在网络上的位置可被透明分配，组件和使用它的程序能在同一进程中、不同进程中或不同机器上运行。组件之间是相互独立的。组件对象通过一个**内部引用计数器**来管理它自己的生存期，这个计数器存放任何时候连接到该对象的客户数。当引用计数变为0时，对象可以把自己从内存中释放掉。这使程序员不必考虑与提供可共享资源有关的问题。
+
+## 22.	如何理解COM对象和接口?
+
+一个对象实现一个接口，意思就是该对象使用代码实现了接口的每个方法并且为这些函数通向COM库提供了COM的二进制指针。然后COM使这些函数运行在请求了一个指向该接口的任何客户端。
+
+COM在接口的定义和实现上有根本的差别。接口实际上是由一**组定义了用法的相互联系的函数原型组成，只是它不能够被实现**。这些函数原型就**相当于C++中含有纯虚拟函数的基类**。
+
+一个接口定义制定了接口的成员函数、调用方法、返回类型，它们的参数的类型和数量，以及这些函数要干什么。但是，这里并没有与接口实现相关的东西。
+
+接口的实现就是程序员在一个接口定义上提供的执行相关动作的代码。客户调用完全决定于接口的定义。接口实现的一个实例，实际上就是一个指向一组方法的指针，即是指**指向一个接口的函数表**，该函数表引用了该接口所有方法的实现。每个接口是一个固定的一组方法的集合， 在运行时通过globally unique interface identifier (IID)来定位。这里，IID是com支持的globally unique identifier (GUID)的特殊的实例。这样做就不会产生单一系统上相同名字、接口的多个版本的COM之间的冲突了。
+
+一个COM接口与C++类是不一样的。**一个COM接口不是一个对象，它只是简单地关联一组函数，是客户和程序之间通信的二进制标准**。只要它提供了指向接口方法的指针，这个对象就可以用任何语言来实现。COM接口是强类型的————每个接口有它自己的接口标识符。另外，不能用老版本的接口标识符定义新的版本，接口的IID定义的接口合同是明确、唯一的。
+
+继承在COM里并不意味着代码的重用。因为接口没有实现关联，接口继承并不意味着代码继承。意思仅仅是，一个接口同一个合同关联，就像C+ +的纯虚拟基类的创建和修改一样，可以添加方法或者更进一步的加强方法的使用。在COM里没有选择性继承。如果一个接口由另一个接口继承的话，它就包含了另一个接口定义的**所有的方法**。
+
+管理实现一个COM对象的IUnknown::QueryInterface方法有3个主要规则:
+
+- 对象必须有一个标识符。
+- 一个对象实例的接口集合必须是静态的( static)；
+- 在对象中从任何一个其他的接口查询此接口都应该成功。
+
+## 23.	简述COM、ActiveX 和DCOM
+
+COM (Component Object Mode)即组件对象模型，是组件之间相互接口的规范。其作用是使各种软件构件和应用软件能够用一种统一的标准方式进行交互。COM不是一种面向对象的语言，而**是一种与源代码无关的二进制标准**。
+
+ActiveX是Microsoft提出的一套**基于COM的构件技术标准**，实际上是对象嵌入与链接(OLE)的新版本。
+
+基于分布式环境下的COM被称作DCOM (Distribute COM,分布式组件对象模型),它**实现了COM对象与远程计算机上的另一个对象之间直接进行交互**。DCOM规范定义了分散对象创建和对象间通信的机制，DCOM是ActiveX的基础，因为ActiveX 主要是针对Internet应用开发(相比OLE)的技术，当然也可以用于普通的桌面应用程序。
+
+## 24.	√什么是DLL HELL
+
+DLL HELL主要是指DLL (动态链接库)版本冲突的问题。一般情况下，DLL新版本会覆盖旧版本，那么原来使用旧版本的DLL的应用程序就不能继续正常工作了。
+
+:zap:扩展知识:**虛函数表**
+
+大家知道，虚函数(Virtual Function)是通过一张虛函数表( Virtual Table)来实现的。在这个表中，主要是一个**类的虚函数的地址表**，这张表解决了继承、覆盖的问题，其内容真实反映实际的函数。这样，在有虛函数的类的实例中，这个表被分配在了这个**实例的内存中**，所以，当用父类的指针来操作一个子类的时候，这张虚函数表就显得尤为重要了。它就像一个地图一样，指明了实际所应该调用的函数。
+
+C++的标准规格说明书中说到，编译器**必须保证虚函数表的指针存在于对象实例中最前面的位置**(这是为了保证**正确取到虚函数的偏移量**)。这意味着通过对象实例的地址得到这张虚函数表，然后就可以遍历其中的函数指针，并调用相应的函数。 
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Base{
+public:
+    virtual void fun1() { cout << "Base::fun1" << endl; }
+
+    virtual void fun2() { cout << "Base::fun2" << endl; }
+
+    virtual void fun3() { cout << "Base::fun3" << endl; }
+
+private:
+    int num1;
+    int num2;
+};
+
+typedef void (*Fun)(void);
+
+int main() {
+    Base b;
+    Fun pFun;
+
+    //取得Base::fun1()地址
+    pFun = (Fun) *((int *) *(int *) (&b) + 0);
+    //执行 Base: :fun1()
+    pFun();
+    //取得 Base::fun1()地址
+    pFun = (Fun) *((int *) *(int *) (&b) + 1);
+    //执行Base: :fun2()
+    pFun();
+
+    //取得Base: :fun1()地址
+    pFun = (Fun) *((int *) *(int *) (&b) + 2);
+    //执行 Base::fun3()
+    pFun();
+
+    return 0;
+}
+```
+
+√可以看到，通过函数指针pFun的调用，分别执行了对象b的三个虚函数。通过这个示例发现，可以通过强行把&b转成int*，取得虚函数表的地址，然后再次取址就可以得到第一个虚函数的地址了，也就是Base:fun1()。如果要调用Base::fun20)和 Base::fun30),只需要把&b先加上数组元素的偏移，后面的步骤类似就可以了。程序中的Base对象b内存结构图如图7.3所示。
+
+![image-20200328210506819](C&C++程序面试秘籍/image-20200328210506819.png)
+
+一个类会有多少张虚函数表呢?
+
+**对于一个单继承的类，如果它有虚拟函数，则只有一张虚函数表**。 **对于多重继承的类，它可能有多张虚函数表**。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Base1{
+public:
+    Base1(int num) : num_1(num) {}
+
+    virtual void foo1() { cout << "Base1::foo1 " << num_1 << endl; }
+
+    virtual void foo2() { cout << "Base1::foo2 " << num_1 << endl; }
+
+    virtual void foo3() { cout << "Base1::foo3 " << num_1 << endl; }
+
+private:
+    int num_1;
+};
+
+class Base2{
+public:
+    Base2(int num) : num_2(num) {}
+
+    virtual void foo1() { cout << "Base2::foo1 " << num_2 << endl; }
+
+    virtual void foo2() { cout << "Base2::foo2 " << num_2 << endl; }
+
+    virtual void foo3() { cout << "Base2::foo3" << num_2 << endl; }
+
+private:
+    int num_2;
+};
+
+class Base3{
+public:
+    Base3(int num) : num_3(num) {}
+
+    virtual void foo1() { cout << "Base3::foo1 " << num_3 << endl; }
+
+    virtual void foo2() { cout << "Base3::foo2 " << num_3 << endl; }
+
+    virtual void foo3() { cout << "Base3::foo3 " << num_3 << endl; }
+
+private:
+    int num_3;
+};
+
+class Derived1 : public Base1{
+public:
+    Derived1(int num) : Base1(num) {}
+
+    //无覆盖
+    virtual void faa1() { cout << "Derived1::faa1" << endl; }
+
+    virtual void faa2() { cout << "Derived1::faa2" << endl; }
+};
+
+class Derived2 : public Base1{
+public:
+    Derived2(int num) : Base1(num) {}
+
+    //只覆盖了Base1 ::foo2
+    virtual void foo2() { cout << "Derived2::foo2" << endl; }
+
+    virtual void fbb2() { cout << "Derived2: :fbb2" << endl; }
+
+    virtual void fbb3() { cout << "Derived2::fbb3" << endl; }
+};
+
+//多重继承,无覆盖
+class Derived3 : public Base1, public Base2, public Base3{
+public:
+
+    Derived3(int num_1, int num_2, int num_3) :
+            Base1(num_1), Base2(num_2), Base3(num_3) {}
+
+    virtual void fcc1() { cout << "Derived3::fcc1" << endl; }
+
+    virtual void fcc2() { cout << "Derived3::fcc2" << endl; }
+};
+
+//多重继承,有覆盖
+class Derived4 : public Base1, public Base2, public Base3{
+public:
+    Derived4(int num_1, int num_2, int num_3) :
+            Base1(num_1), Base2(num_2), Base3(num_3) {}
+
+    //覆盖了 Base1::foo1, Base2::foo1,Base3::foo1
+    virtual void foo1() { cout << "Derived4::foo1" << endl; }
+
+    virtual void fdd() { cout << "Derived4::fdd" << endl; }
+};
+
+int main() {
+    Base1 *pBase1 = NULL;
+    Base2 *pBase2 = NULL;
+    Base3 *pBase3 = NULL;
+    cout << "---- 一般继承自Base1,无覆盖----" << endl;
+    //Derived1 一般继承自Base1. 无覆盖
+    Derived1 d1(1);
+    pBase1 = &d1;
+    //执行Base1::foo1();
+    pBase1->foo1();
+
+    cout << "---- 一般继承自Base1,覆盖foo2()----" << endl;
+    //Derived2 一般继承自Base1,覆盖了Base1::foo2()
+    Derived2 d2(2);
+    pBase1 = &d2;
+    //执行Derived2::foo2();
+    pBase1->foo2();
+
+    cout << "----多重继承， 无覆盖----" << endl;
+    //Derived3多重继承自Base1 , Base2, Base3,没有覆盖
+    Derived3 d3(1, 2, 3);
+    pBase1 = &d3;
+    pBase2 = &d3;
+    pBase3 = &d3;
+    //执行Base1::foo1();
+    pBase1->foo1();
+    //执行Base2: :foo1();
+    pBase2->foo1();
+    //执行Base3::foo1();
+    pBase3->foo1();
+
+    cout << "---- 多重继承，覆盖foo1()----" << endl;
+    //Derived4 多重继承自Base1 , Base2, Base3,覆盖foo1()
+    Derived4 d4(1, 2, 3);
+    pBase1 = &d4;
+    pBase2 = &d4;
+    pBase3 = &d4;
+    //执行Derived4::foo1();
+    pBase1->foo1();
+    //执行Derived4::foo1();
+    pBase2->foo1();
+    //执行Derived4: :foo1();
+    pBase3->foo1();
+    return 0;
+}
+```
+
+4种继承情况下的虚函数表。
+
+1. **一般继承 (无虚函数覆盖)**
+
+Derived1类继承自Base1类，Derived1的虚函数表如图7.4所示。Derived1类内没有任何覆盖基类Basel的函数，因此两个虚拟函数faa1()和faa2()被依次添加到了虚函数表的末尾。
+
+![image-20200328175814581](C&C++程序面试秘籍/image-20200328175814581.png)
+
+2. **一般继承(有虚函数覆盖)**
+
+Derived2类继承自Base1类，并对Base1类中的虚函数foo2()进行了覆盖。Derived2 的虚函数表如图7.5所示。
+
+Derived2覆盖了基类Base1的faal()，因此其虚函数表中Derived2::foo2(替换了Base1::foo2()-项，fbb2(和 fbb3()被依次添加到了虚函数表的末尾。
+
+![image-20200328180544680](C&C++程序面试秘籍/image-20200328180544680.png)
+
+3. **多重继承(无虚函数覆盖)**
+
+Derived3类继承自Base1类、Base2类、Base3 类，Derived3 的虚函数表如图7.6所示。
+
+![image-20200328180732085](C&C++程序面试秘籍/image-20200328180732085.png)
+
+每个父类都有自己的虚表，Derived3也就有了3个虚表，这里**父类虚表的顺序与声明继承父类的顺序一致**。这样做就是为了**解决不同的父类类型的指针指向同一个子类实例**，而能够调用到实际的函数。例如
+
+```c++
+Base2 *pBase2 = new Derived3() ;
+pBase2->foo2(); //调用 Base2::foo2()
+```
+
+把Base2类型的指针指向Derived3实例，那么调用将是对应Base2虚表里的那些函数。
+
+4. **多重继承(有虚函数覆盖)**
+
+Derived4类继承自Base1类、Base2类、Base3类，并对Base1类的foo1()、Base2 类的foo1()、Base3 类的foo1()都进行了覆盖。Derived4的虚函数表如图7.7所示。
+
+![image-20200328181837243](C&C++程序面试秘籍/image-20200328181837243.png)
+
+可以看见，Base::foo1()、Base2::foo1()和 Base3::foo1()都被替换成了Deried::foo1()。这样，我们就可以把任意一个静态类型的父类指向子类，并调用子类的f()了。如
+
+```c++
+Base1 *pBase1 = new Derived4();
+pBase1->f0010);  //调用从Base1继承的虚表中的Derived4::foo1()
+```
+
+结果：
+```c++
+//---- 一般继承自Base1,无覆盖----
+//Base1::foo1 1
+//---- 一般继承自Base1,覆盖foo2()----
+//Derived2::foo2
+//----多重继承， 无覆盖----
+//Base1::foo1 1
+//Base2::foo1 2
+//Base3::foo1 3
+//---- 多重继承，覆盖foo1()----
+//Derived4::foo1
+//Derived4::foo1
+//Derived4::foo1
+```
+
