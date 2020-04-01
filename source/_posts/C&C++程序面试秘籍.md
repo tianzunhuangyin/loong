@@ -7441,3 +7441,469 @@ pBase1->f0010);  //调用从Base1继承的虚表中的Derived4::foo1()
 //Derived4::foo1
 ```
 
+# 8.	数据结构
+
+## 1.	编程实现一个单链表的建立
+
+```c++
+#include <iostream>
+#include <stdio.h>
+
+typedef struct node{
+    //节点内容
+    int data;
+    //下一个节点
+    node *next;
+};
+
+node *create() {
+    //链表中的数据个数
+    int i = 0;
+    node *head, *p, *q;
+    int x = 0;
+
+    //创建头节点
+    head = (node *) malloc(sizeof(node));
+
+    while (1) {
+        printf("Please input the data:");
+        scanf("%d",&x);
+        //data为0时 创建结束
+        if (x == 0)
+            break;
+        p = (node *)malloc(sizeof(node));
+        p->data = x;
+        //链表只有一个元素
+        if ( ++i == 1){
+            //链接到头结点后面
+            head->next = p;
+        } else{
+            q->next = p;
+        }
+        // q为该链的最后一个节点，每次将新节点p挂接在q后面。
+        q = p;
+    }
+    //链表的最后一个指针为NULL
+    q->next = NULL;
+    return head;
+}
+```
+
+使用while循环读取用户的输入数据，并为新节点开辟空间，当节点数量为1时，表示该节点是第一个节点，然后将q指向该节点。之后则是将新节点挂载在q上，因为每次更新后的q都是最后一个节点。当数据输入为0时，表示数据结束，把末尾节点的next指针置为NULL。
+
+## 2.	编程实现一个单链表的测长
+
+```c++
+#include <stdio.h>
+
+typedef struct node{
+    //节点内容
+    int data;
+    //下一个节点
+    node *next;
+};
+int length(node *head){
+    int len = 0;
+    node *p;
+    p = head->next;
+    while (p != NULL){
+        len++;
+        p = p->next;
+    }
+    return len;
+}
+```
+
+因为节点末尾的next为NULL，因此作为判断条件。
+
+## 3.	编程实现一个单链表的打印
+
+```c++
+//单向链表打印
+void print(node *head){
+    node *p = head;
+    int index = 0;
+    if(p->next == NULL){
+        printf("Link id Empty!!\n");
+        return ;
+    }
+    p = head->next;
+    while (p->next != NULL){
+        printf("The %dth node is :%d\n",++index,p->data);
+        p = p->next;
+    }
+}
+```
+
+单链表的打印与单链表的测长方法类似，使用while循环遍历链表所有节点并打印各个节点内容，当遇到NULL时结束循环。
+
+## 4.	编程实现一个单链表节点的查找
+
+```c++
+node *find(node *head, int pos) {
+    node *p = head->next;
+
+    if (pos < 0){
+        printf("查找位置不对\n");
+        return NULL;
+    }
+    if (pos == 0){
+        return head;
+    }
+    if(p == NULL){
+        printf("Link is Empty!\n");
+        return NULL;
+    }
+    while (--pos){
+        if((p = p->next) == NULL){
+            printf("incorrect pos to search ndoe!\n");
+            break;
+        }
+    }
+    return p;
+}
+```
+
+需要先判断pos是否正确，且链表不为空，然后还有判断长度是否足够。
+
+## 5.	编程实现一个单链表节点的插入
+
+向单链表中某个位置(第pos个节点)之后插入节点，这里分为插入到链表首部、插入到链表中间，以及链表尾端3种情况。
+
+```c++
+node *insert_node(node *head,int pos,int data){
+    node *new_node = NULL;
+    node *p;
+    new_node = (node *)malloc(sizeof(node));
+    new_node->data = data;
+    if (pos < 0){
+        printf("insert pos is incorrect!\n");
+        return NULL;
+    }
+    p = search_node(head,pos);
+    if (p!=NULL){
+        //3中插法 一种表示
+        new_node->next = p->next;
+        p->next = new_node;
+    }
+    return head;
+}
+```
+
+## 6.	编程实现一个单链表节点的删除
+
+```c++
+node *delete_node(node *head,int pos){
+    node *item = NULL;
+    node *p;
+    if(head->next == NULL){
+        printf("Link is Empty!\n");
+        return NULL;
+    }
+    p = search_node(head,pos-1);
+    if (p != NULL && p->next != NULL){
+        item = p->next;
+        p->next = item->next;
+        delete item;
+    }
+    return head;
+}
+```
+
+测试程序：
+
+```c++
+int main(){
+    //创建单链表
+    node *head = create();
+    //测量单链表长度
+    printf("Length: %d\n", length(head));
+    //在第2个节点之后插入5
+    head = insert_node(head, 2, 5);
+    printf("insert integer 5 after 2th node: \n");
+    //打印单链表
+    print (head) ;
+    //删除第2个节点
+    head = delete_node (head,3);
+    printf("delete the 3th node: \n");
+    print (head) ;
+}
+```
+
+## 7.	实现一个单链表的逆置
+
+```c++
+node *reverse(node *head){
+    node *p,*q,*r;
+    if(head->next == NULL){
+        printf("Link is Empty!\n");
+        return NULL;
+    }
+    //保存第一个节点 使其作为末节点
+    p = head->next;
+    //记录第二个节点
+    q = p->next;
+    //将第一个节点的下一个置为null，因为逆置之后时最后一个节点。
+    p->next = NULL;
+    while (q != NULL){
+        //q记录之后的节点 因为q现在要改变方向了
+        r = q->next;
+        //改变q的next指向对象
+        q->next = p;
+        //p->q->r 三者位置
+        //改变p,q的位置。 改变p时，q是变得，因此将q赋给p（因为p要到q的位置），
+        p = q;
+        //同理 改变q的位置时，r是不变的，因此吧r赋给q；
+        q = r;
+    }
+    //头节点
+    head->next = p;
+    return head;
+}
+```
+
+## 8.	寻找单链表的中间元素
+
+解法：设置两个标志，皆从head->next开始，令二者步长分别为1,2。这样一个移动的距离是另一个的2倍，然后判断移动到末尾的那个标志是否需要移动，需要移动(代表是奇数个)时，另一个标志位就是中间元素。无需移动时，让另一个标志向移动一位，即是中间元素。
+
+```c++
+node * search_mid(node *head){
+    if (!head)
+        return NULL;
+    node *fast,*mid;
+    //将快（fast），慢（mid/slow）初始化与第一个节点
+    fast = head->next;
+    mid = head->next;
+    while (NULL != fast->next && NULL != fast->next->next){
+        mid = mid->next;
+        fast = fast->next->next;
+    }
+    if (NULL != fast->next){
+        mid = mid->next;
+    }
+    return mid;
+}
+```
+
+## 9.	单链表的正向排序
+
+```c++
+node *insert_sort(node *head, int data) {
+    if (!head) {
+        return NULL;
+    }
+    node *cur, *new_node;
+
+    new_node = (node *) malloc(sizeof(node));
+    new_node->data = data;
+
+    cur = head->next;
+
+    //插入在头结点之前
+    if(new_node->data <= cur->data){
+        new_node->next = cur;
+        head->next = new_node;
+        return head;
+    }
+    cur = head->next;
+    while (new_node->data > cur->data && NULL!= cur->next){
+        cur = cur->next;
+    }
+    //中间插入和末尾插入 
+    new_node->next = cur->next;
+    cur->next = new_node;
+    return head;
+}
+```
+
+## 10.	判断链表是否存在环型链表问题
+
+```c++
+bool isLoop(node *head, node **start) {
+    if (NULL == head || NULL == head->next) {
+        return false;
+    }
+    node *p1 = head->next, *p2 = head->next;
+    do {
+        p1 = p1->next;
+        p2 = p2->next->next;
+    } while (NULL != p2 && NULL != p2->next && p1 != p2);
+    //没有环时，二者无法相遇，因此不相等。
+    if (p1 == p2) {
+        *start = p1;
+        return true;
+    }
+    return false;
+}
+```
+
+使用快慢指针（一个步长是另一个的2倍）解决，快指针与慢指针相遇时，快指针已超越一圈，因此找到相遇点。
+
+## 11.	有序链表的合并
+
+已知两个链表headl和head2各自有序，请把它们合并成一个链表，依然有序。使用非递归方法以及递归方法。
+
+- 方法一：非递归法
+
+```c++
+//单链表节点插入
+node *insert_node(node *head, node *item) {
+    if (!head) {
+        return NULL;
+    }
+    node *p = head->next;
+    //始终指向P前面的节点
+    node *q = NULL;
+
+    //这里需要着重强调一下，必须先判断是否为null，如果调换会导致段错误。
+    while (NULL != p && p->data < item->data  ) {
+        q = p;
+        p = p->next;
+    }
+    //插入原头结点之前
+    if (p == head->next) {
+        item->next = p;
+        head->next = item;
+        return head;
+    }
+    //item->next = q;
+    //p->next = item;
+    //此处item传入为链表时，会修改item的后续
+    q->next = item;
+    item->next = p;
+    return head;
+}
+
+//合并两个单链表
+node * merge(node *head1,node *head2){
+    if (NULL == head1){
+        return head2;
+    } else if (NULL == head2){
+        return head1;
+    }
+    //p用来保存短链表,并指向头结点，head用来保存长链表
+    node *p,*head;
+    //那个链表长就以哪个链表为主体进行插入操作
+    if (length(head1) >= length(head2)){
+         p = head2->next;
+         head = head1;
+    } else{
+        p = head1->next;
+        head = head2;
+    }
+    node *nextP;
+    while (NULL != p ){
+        //借用nextP来保存p的下一个节点，因为在insert_node 中会修改p的后续节点。
+        nextP = p->next;
+        head = insert_node(head,p);
+        p = nextP;
+    }
+    return head;
+}
+```
+
+- 方法二：递归法
+
+  
+
+```c++
+//递归合并两个链表  仅用于处理头指针与头结点一致的链表。
+node *mergeRecursive(node *head1,node *head2){
+    if (NULL == head1){
+        return head2;
+    } else if (NULL == head2){
+        return head1;
+    }
+    node *head = NULL;
+    if (head1->data > head2->data){
+        head = head2;
+        head->next = mergeRecursive(head1,head->next);
+    } else{
+        head = head1;
+        head->next = mergeRecursive(head->next,head2);
+    }
+    return head;
+}
+```
+
+## 12.	约瑟夫问题的答案
+
+编号为1，2，…，N的N个人按顺时针方向围坐一圈，每人持有一一个密码( 正整数)，一开始任选一个正整数作为报数上限值M，从第一个人开始按顺时针方向自1开始按顺序报数，报到M时停止报数。报M的人出列，将他的密码作为新的M值，从他在顺时针方向上的下一个人开始重新从1报数，如此下去，直至所有人全部出列为止。
+
+**思路**：
+
+显然当有人退出圆圈后，报数的工作要从下一个人开始继续，而剩下的人仍然是围成一个圆圈的，因此可以使用循环单链表。由于退出圆圈的工作对应着表中结点的删除操作，对于这种删除操作频繁的情况，选用效率较高的链表结构。为了程序指针每一次都指向一个具体的代表一个人的结点而不需要判断，链表不带头结点。所以，对于所有人围成的圆圈所对应的数据结构采用一个不带头节点的循环链表来描述。设头指针为p,并根据具体情况移动。
+
+```c++
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+typedef struct node{
+    int data;
+    node *next;
+} node ;
+
+//构造几点数量为n的单向循环链表
+node *nodeCreate(int n){
+    node *head = nullptr;
+    if (0 != n){
+        int index = 1;
+        node *p_node = nullptr;
+
+        //构造n个node
+        p_node = new node[n];
+        //申请内存失败 返回NULL
+        if (nullptr == p_node){
+            return nullptr;
+        } else{
+            memset(p_node,0,n*sizeof(node));
+        }
+        head = p_node;
+        //构造循环链表
+        while (index < n){
+            p_node->data = index;
+            p_node->next = p_node + 1;
+            p_node = p_node->next;
+            index++;
+        }
+        p_node->data = n;
+        p_node->next  = head;
+    }
+    return head;
+}
+
+
+int main(){
+    node *pList = NULL;
+    node *pIter = NULL;
+    node *delNode = NULL;
+
+    int n = 20;
+    int m = 6;
+
+    //构造单向循环列表
+    pList = nodeCreate(n);
+
+    //Josephus 循环取数
+    pIter = pList;
+    //成环后只剩一个元素，就回自己等于自己
+    while (pIter != pIter->next){
+        int i = 1;
+        //取到第m-1个节点
+        for (; i < m - 1; ++i) {
+            pIter = pIter->next;
+        }
+        //删除第m个节点的值
+        delNode = pIter->next;
+        pIter->next = pIter->next->next;
+        pIter = pIter->next;
+        m = delNode->data;
+        printf("%d\n",delNode->data);
+    }
+
+    //释放申请的空间
+    delete []pList;
+    return 0;
+}
+```
